@@ -47,8 +47,17 @@ int main()
 	mainCam.m_focusDistance = 10.0f;
 
 	// Render
+
+	
+	auto time = std::chrono::system_clock::now();
+
+
 	mainCam.Render(scene);
 
+	std::chrono::duration<float> delta = std::chrono::system_clock::now()-time;
+	std::clog << "Rendering took: " << (delta.count()) << "s\n";
+
+	while (std::cin.get() != '\n');
 
 
 	delete ground;
