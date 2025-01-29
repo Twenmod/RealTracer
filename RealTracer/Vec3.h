@@ -175,7 +175,7 @@ inline Vec3 Reflect(const Vec3& vector, const Vec3& normal)
 
 inline Vec3 Refract(const Vec3& vector, const Vec3& normal, float relativeIOR)
 {
-	float cosTheta = std::min(dot(-vector, normal), 1.f);
+	float cosTheta = min(dot(-vector, normal), 1.f);
 	Vec3 perpandicular = relativeIOR * (vector + cosTheta * normal);
 	Vec3 parallel = -sqrt(abs(1.f - perpandicular.Length2())) * normal;
 	return perpandicular + parallel;

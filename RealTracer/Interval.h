@@ -9,7 +9,7 @@ public:
 	float Contains(float x) const { return m_min <= x && x <= m_max; }
 	float Surrounds(float x) const { return m_min < x && x < m_max; }
 
-	float Clamp(float x) const { return std::max(std::min(x, m_max), m_min); }
+	float Clamp(float x) const { return max(min(x, m_max), m_min); }
 
 	float m_min{ INFINITY };
 	float m_max{ -INFINITY };

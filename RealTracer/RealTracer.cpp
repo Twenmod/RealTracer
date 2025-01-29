@@ -11,9 +11,9 @@
 #include "MetalMat.h"
 #include "DielectricMat.h"
 
+
 int main()
 {
-
 	Material* ground = new LambertianMat(Color(0.0f, 0.8f, 0.f));
 	Material* middle = new LambertianMat(Color(0.3f, 0.3f, 0.f));
 	Material* glass = new DielectricMat(1.5f);

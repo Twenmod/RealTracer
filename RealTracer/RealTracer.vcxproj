@@ -135,6 +135,7 @@
     <ClCompile Include="DielectricMat.cpp" />
     <ClCompile Include="Hittable.cpp" />
     <ClCompile Include="Interval.cpp" />
+    <ClCompile Include="Jobmanager.cpp" />
     <ClCompile Include="LambertianMat.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MetalMat.cpp" />
@@ -153,6 +154,7 @@
     <ClInclude Include="DielectricMat.h" />
     <ClInclude Include="Hittable.h" />
     <ClInclude Include="Interval.h" />
+    <ClInclude Include="Jobmanager.h" />
     <ClInclude Include="LambertianMat.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MetalMat.h" />

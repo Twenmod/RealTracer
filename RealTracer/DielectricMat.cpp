@@ -15,7 +15,7 @@ bool DielectricMat::Scatter(const Ray& _rayIn, const HitInfo& _hitInfo, Color& _
 	float relativeIOR = _hitInfo.m_frontFace ? (1.f / m_indexOfRefraction) : m_indexOfRefraction;
 	
 	Vec3 rayDir = Normalize(_rayIn.GetDirection());
-	float cosTheta = std::min(dot(-rayDir, _hitInfo.m_normal), 1.f);
+	float cosTheta = min(dot(-rayDir, _hitInfo.m_normal), 1.f);
 	float sinTheta = sqrt(1.f - cosTheta * cosTheta);
 
 	bool cannotRefract = relativeIOR * sinTheta > 1.f;

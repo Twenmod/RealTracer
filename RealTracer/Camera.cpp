@@ -6,6 +6,8 @@
 #include "Hittable.h"
 #include "Material.h"
 
+std::mutex pixelMutex;  // Declare a global or class-scoped mutex
+
 Camera::Camera(Point3 _position)
 {
 	m_position = _position;
@@ -18,26 +20,59 @@ void Camera::Render(const Hittable& scene)
 {
 	Initialize();
 
+	JobManager::CreateJobManager(32);
+
+	JobManager* jobManager = JobManager::GetJobManager();
+
+	std::vector<RayJob*> jobs;
+	Color* pixels;
+	pixels = new Color[IMAGE_WIDTH * IMAGE_HEIGHT];
+
+	int maxThreads = jobManager->MaxConcurrent();
+	int pixelsPerThread = floor((IMAGE_WIDTH * IMAGE_HEIGHT) / maxThreads);
+
+	int jobIndex = 0;
+	for (int i = 0; i < maxThreads; i++)
+	{
+		RayJob* job = new RayJob();
+		jobs.push_back(job);
+		job->camera = this;
+		job->maxBounces = MAX_BOUNCES;
+		job->scene = &scene;
+
+		job->pixelPos = jobIndex;
+
+		//std::clog << "start with x" << job->x << " y" << job->y << " till x" << xPos << " y" << yPos << '\n';
+
+		job->pixelAmount = min(pixelsPerThread, IMAGE_WIDTH * IMAGE_HEIGHT - jobIndex);
+		job->pixels = pixels;
+		jobManager->AddJob2(job);
+
+		jobIndex += (pixelsPerThread);
+
+	}
+	//for (int i = 0; i < jobs.size(); i++)
+	//{
+	//	jobs[i]->Main();
+	//}
+
+
+	jobManager->RunJobs();
+
+	for (int i = 0; i < jobs.size(); i++)
+	{
+		delete jobs[i];
+	}
 	std::cout << "P3\n" << IMAGE_WIDTH << ' ' << IMAGE_HEIGHT << "\n255\n";
 
-	for (int j = 0; j < IMAGE_HEIGHT; j++)
+	for (int x = 0; x < IMAGE_WIDTH * IMAGE_HEIGHT; x++)
 	{
-		std::clog << "\rScanlines remaining: " << (IMAGE_HEIGHT - j) << ' ' << std::flush;
-		for (int i = 0; i < IMAGE_WIDTH; i++)
-		{
-			Color pixelColor(0.f);
-			for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; sample++)
-			{
-				Ray ray = GetRay(i, j);
-				pixelColor += ShootRay(ray, MAX_BOUNCES, scene);
-			}
-			WriteColor(std::cout, pixelColor*PIXEL_SAMPLES_SCALE);
-		}
+		WriteColor(std::cout, pixels[x]);
 	}
 	std::clog << "\rDone.                 \n";
 }
 
-Ray Camera::GetRay(int _pixelX, int _pixelY)
+Ray Camera::GetRay(int _pixelX, int _pixelY) const
 {
 	Vec3 offset = Vec3(RandomFloat() - 0.5f, RandomFloat() - 0.5f, 0);
 	Vec3 sample = pixel00 + ((_pixelX + offset.x()) * pixelDeltaU) + ((_pixelY + offset.y()) * pixelDeltaV);
@@ -93,4 +128,37 @@ void Camera::Initialize()
 	float defocus_radius = m_focusDistance * std::tan(DegToRad(m_defocusAngle / 2));
 	defocusDiskU = u * defocus_radius;
 	defocusDiskV = v * defocus_radius;
+}
+
+void RayJob::Main()
+{
+	for (int i = 0; i < pixelAmount; i++)
+	{
+		int pos = pixelPos + i;
+		int yPos = floor(pos / IMAGE_WIDTH);
+		int xPos = pos - yPos * IMAGE_WIDTH;
+
+		Color pixelColor;
+		for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; sample++)
+		{
+			Ray ray = camera->GetRay(xPos, yPos);
+			pixelColor += camera->ShootRay(ray, maxBounces, *scene);
+		}
+
+		Color& colorOut = pixels[pos];  // Assign color to the correct pixel
+		colorOut = pixelColor * PIXEL_SAMPLES_SCALE;
+
+		//		Color pixelColor(0.f);
+//		for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; sample++)
+//		{
+//			Ray ray = GetRay(i, j);
+//			pixelColor += ShootRay(ray, MAX_BOUNCES, scene);
+//		}
+//		WriteColor(std::cout, pixelColor*PIXEL_SAMPLES_SCALE);
+
+
+		// Update the color values for this pixel
+
+
+	}
 }

@@ -7,7 +7,7 @@
 MetalMat::MetalMat(const Color& _albedo, const float _glossiness)
 {
 	m_albedo = _albedo;
-	m_glossiness = std::min(_glossiness,1.f);
+	m_glossiness = min(_glossiness,1.f);
 }
 
 bool MetalMat::Scatter(const Ray& _rayIn, const HitInfo& _hitInfo, Color& _attentuation, Ray& _rayOut) const

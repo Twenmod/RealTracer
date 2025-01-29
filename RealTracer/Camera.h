@@ -1,8 +1,26 @@
 #pragma once
 
+
+#include "Jobmanager.h"
+
 class Hittable;
 class Ray;
 class Material;
+
+class Camera;
+
+class RayJob : public Job
+{
+public:
+	void Main() override;
+	Camera* camera;
+	int pixelPos;
+	uint maxBounces;
+	Color* pixels;
+	const Hittable* scene;
+	int pixelAmount;
+};
+
 
 class Camera
 {
@@ -17,10 +35,10 @@ public:
 	Vec3 m_direction{Vec3(0.f,0.f,-1.f)};
 	Vec3 m_up{ Vec3(0.f,1.f,0.f) };
 	float m_verticalFOV{ 90 };
-private:
-	Ray GetRay(int pixelX, int pixelY);
-
 	Color ShootRay(const Ray& ray, uint maxBounces, const Hittable& scene) const;
+	Ray GetRay(int pixelX, int pixelY) const;
+private:
+
 	void Initialize();
 
 	Point3 SampleDefocusDisk() const
