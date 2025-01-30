@@ -40,6 +40,26 @@ if (!glfwInit())
 
 
 
+Logger::CreateLogger();
+
+//Set up a window
+if (!glfwInit())
+{
+	Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 	Material* mat = new LambertianMat(Color(0.5f, 0.5f, 0.5f));
 	Material* mat2 = new LambertianMat(Color(0.8f, 0.5f, 0.5f));
 	//Material* glass = new DielectricMat(1.5f);
@@ -84,5 +104,9 @@ if (!glfwInit())
 	std::clog << "Rendering took: " << (delta.count()) << "s\n";
 
 	while (std::cin.get() != '\n');
+
+
+	Logger::DeleteLogger();
+	JobManager::DeleteJobManager();
 
 }
