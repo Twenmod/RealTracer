@@ -74,30 +74,30 @@ __________              ._____________
 
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	const char* glsl_version = "#version 330";
-	ImGui::CreateContext();
-	ImGui::StyleColorsClassic();
-	//ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
-	ImGuiIO io = ImGui::GetIO();
-	io.DisplaySize = ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT);
-	io.Fonts->AddFontDefault();  // Ensure the default font is loaded
-	io.Fonts->Build();  // Build the font atlas
+	//const char* glsl_version = "#version 330";
+	//ImGui::CreateContext();
+	//ImGui::StyleColorsClassic();
+	////ImGui::StyleColorsDark();
+	//ImGui_ImplGlfw_InitForOpenGL(window, true);
+	//ImGui_ImplOpenGL3_Init(glsl_version);
+	//ImGuiIO io = ImGui::GetIO();
+	//io.DisplaySize = ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT);
+	//io.Fonts->AddFontDefault();  // Ensure the default font is loaded
+	//io.Fonts->Build();  // Build the font atlas
 
-	unsigned char* tex_pixels;
-	int tex_width, tex_height;
-	io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
+	//unsigned char* tex_pixels;
+	//int tex_width, tex_height;
+	//io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
 
-	// Upload texture to OpenGL (for the font atlas)
-	GLuint fontTexture;
-	glGenTextures(1, &fontTexture);
-	glBindTexture(GL_TEXTURE_2D, fontTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_pixels);
+	//// Upload texture to OpenGL (for the font atlas)
+	//GLuint fontTexture;
+	//glGenTextures(1, &fontTexture);
+	//glBindTexture(GL_TEXTURE_2D, fontTexture);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_pixels);
 
-	io.Fonts->SetTexID((ImTextureID)(intptr_t)fontTexture);
+	//io.Fonts->SetTexID((ImTextureID)(intptr_t)fontTexture);
 
 
 	const char* vertexShader = R"(
@@ -211,7 +211,7 @@ void main() {
 	Scene scene;
 	scene.Add(*new Sphere(diffuse, 0.f, 0.f, 1.f, 0.5f));
 	scene.Add(*new Sphere(red, 2.f, 0.f, -1.f, 0.5f));
-	scene.Add(*new Sphere(glass, 4.f, 0.3f, 0.f, 0.8f));
+	//scene.Add(*new Sphere(glass, 4.f, 0.3f, 0.f, 0.8f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
@@ -240,32 +240,32 @@ void main() {
 		frameRates.push_back(1.f / deltaTime);
 		lastTime = time;
 
-		ImGui::NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui_ImplOpenGL3_NewFrame();
+		//ImGui::NewFrame();
+		//ImGui_ImplGlfw_NewFrame();
+		//ImGui_ImplOpenGL3_NewFrame();
 
-		static bool open = true;
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_Appearing);
-		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
-		ImGui::Begin("Debug", &open);
-		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-		if (ImGui::TreeNode("Statistic"))
-		{
-			ImGui::PlotHistogram("##1", frameRates.data(), frameRates.size());
-			float tot = 0;
-			for (float& frame : frameRates)
-			{
-				tot += frame;
-			}
-			tot /= frameRates.size();
-			ImGui::Text("FPS: %.f (%.2fms)",tot,deltaTime*1000.f);
+		//static bool open = true;
+		//ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_Appearing);
+		//ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
+		//ImGui::Begin("Debug", &open);
+		//ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+		//if (ImGui::TreeNode("Statistic"))
+		//{
+		//	ImGui::PlotHistogram("##1", frameRates.data(), frameRates.size());
+		//	float tot = 0;
+		//	for (float& frame : frameRates)
+		//	{
+		//		tot += frame;
+		//	}
+		//	tot /= frameRates.size();
+		//	ImGui::Text("FPS: %.f (%.2fms)",tot,deltaTime*1000.f);
 
-			ImGui::TreePop();
-		}
-		ImGui::End();
+		//	ImGui::TreePop();
+		//}
+		//ImGui::End();
 
 		dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time)*0.5+0.5;
-		dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time*0.6)*2;
+		//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time*0.6)*2;
 
 		std::vector<Vec3Single> frame = mainCam.Render(scene);
 
@@ -291,10 +291,10 @@ void main() {
 
 		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
 
-		ImGui::EndFrame();
+		//ImGui::EndFrame();
 
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		//ImGui::Render();
+		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
 		glfwSwapBuffers(window);

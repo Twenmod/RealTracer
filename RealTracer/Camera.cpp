@@ -123,7 +123,7 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 
 	Vec3 direction = Normalize(_ray.direction);
 	xs::batch<float> a = xs::batch<float>(0.5f) * direction.y + 1.0f;
-	Color backgroundColor = Lerp(Color(xs::batch<float> (1.f)), Color(xs::batch<float> (0.5f), xs::batch<float> (0.7f), xs::batch<float> (1.0f)), a);
+	Color backgroundColor = Lerp(Color(xs::batch<float> (1.f)), Color(xs::batch<float> (0.6f), xs::batch<float> (0.8f), xs::batch<float> (1.0f)), a);
 
 	attentuation.x = xs::select(intersections, attentuation.x, backgroundColor.x);
 	attentuation.y = xs::select(intersections, attentuation.y, backgroundColor.y);
@@ -182,12 +182,6 @@ void RayJob::Main()
 			xs::batch<Ray> rayGroup;
 
 			Color rayColors = camera->ShootRay(ray, maxBounces, *scene);
-			xs::batch_bool<float> isNan = xs::isnan(rayColors.x);
-			rayColors.x = xs::select(isNan, xs::batch<float>(0), rayColors.x);
-			isNan = xs::isnan(rayColors.y);
-			rayColors.y = xs::select(isNan, xs::batch<float>(0), rayColors.y);
-			isNan = xs::isnan(rayColors.z);
-			rayColors.z = xs::select(isNan, xs::batch<float>(0), rayColors.z);
 			pixelColor += rayColors;
 		}
 

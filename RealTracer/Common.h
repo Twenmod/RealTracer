@@ -3,12 +3,12 @@
 namespace xs = xsimd;
 
 //Window settings
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 400;
+constexpr int WINDOW_HEIGHT = 300;
 
 //Image settings
-constexpr int IMAGE_WIDTH = 400u;
-constexpr int IMAGE_HEIGHT = 300u;
+constexpr int IMAGE_WIDTH = 200u;
+constexpr int IMAGE_HEIGHT = 150u;
 
 
 //Tracing settings
