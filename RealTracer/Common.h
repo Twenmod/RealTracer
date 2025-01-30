@@ -3,20 +3,20 @@
 namespace xs = xsimd;
 
 //Window settings
-constexpr int WINDOW_WIDTH = 1280;
-constexpr int WINDOW_HEIGHT = 768;
+constexpr int WINDOW_WIDTH = 800;
+constexpr int WINDOW_HEIGHT = 600;
 
 //Image settings
-constexpr int IMAGE_WIDTH = 680u;
-constexpr int IMAGE_HEIGHT = 428u;
+constexpr int IMAGE_WIDTH = 400u;
+constexpr int IMAGE_HEIGHT = 300u;
 
 
 //Tracing settings
 
 //Actual samples is this times your available simd size (1, 4, 8, 16)
-constexpr int SAMPLES_PER_PIXEL = 1;
+constexpr int SAMPLES_PER_PIXEL = 2;
 
-constexpr int MAX_BOUNCES = 10;
+constexpr int MAX_BOUNCES = 5;
 constexpr float MIN_INTERSECTION_DEPTH = 0.001f;
 
 
@@ -29,6 +29,7 @@ enum E_MATERIALS
 	diffuse,
 	red,
 	grass,
+	glass
 };
 
 

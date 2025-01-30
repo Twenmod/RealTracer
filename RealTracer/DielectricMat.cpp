@@ -31,3 +31,35 @@
 //
 //	return true;
 //}
+
+DielectricMat::DielectricMat(const float _IOR)
+{
+	IOR = _IOR;
+}
+
+xs::batch_bool<float> DielectricMat::Scatter(const RayGroup& _rayIn, const HitInfoGroup& _hitInfo, Color& _attentuation, RayGroup& _rayOut) const
+{
+	_attentuation = Color(xs::batch<float>(1.f));
+	xs::batch<float> relativeIOR = xs::select(!_hitInfo.frontFace, xs::batch<float>(1.f / IOR), xs::batch<float>(IOR));
+
+	Vec3 rayDir = Normalize(_rayIn.direction);
+	xs::batch<float> cosTheta = xs::min(Dot(-rayDir, _hitInfo.normal), xs::batch<float>(1.f));
+	xs::batch<float> sinTheta = xs::max(xs::batch<float> (0.f),sqrt(1.f - cosTheta * cosTheta));
+
+	xs::batch_bool<float> cannotRefract = relativeIOR * sinTheta > xs::batch<float>(1.f);
+
+
+	xs::batch_bool<float> reflect = cannotRefract | (Reflectance(cosTheta, relativeIOR) > RandomBatch());
+
+	Vec3 reflection = Reflect(rayDir, _hitInfo.normal);
+	Vec3 refraction = Refract(rayDir, _hitInfo.normal, relativeIOR);
+
+	Vec3 refractDir;
+	refractDir.x = xs::select(reflect, reflection.x, refraction.x);
+	refractDir.y = xs::select(reflect, reflection.y, refraction.y);
+	refractDir.z = xs::select(reflect, reflection.z, refraction.z);
+
+	_rayOut = RayGroup(_hitInfo.point, refractDir);
+
+	return xs::batch_bool<float>(true);
+}

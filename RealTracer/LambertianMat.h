@@ -6,7 +6,7 @@ class LambertianMat :
 public:
 	LambertianMat(const Color& albedo);
 
-	bool Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, Color& attentuation, RayGroup& rayOut) const override;
+	xs::batch_bool<float>Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, Color& attentuation, RayGroup& rayOut) const override;
 
 private:
 	Color m_albedo;

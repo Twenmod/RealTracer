@@ -211,6 +211,7 @@ void main() {
 	Scene scene;
 	scene.Add(*new Sphere(diffuse, 0.f, 0.f, 1.f, 0.5f));
 	scene.Add(*new Sphere(red, 2.f, 0.f, -1.f, 0.5f));
+	scene.Add(*new Sphere(glass, 4.f, 0.3f, 0.f, 0.8f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
@@ -220,6 +221,7 @@ void main() {
 	mainCam.materials.push_back(new LambertianMat(Color(0.5f, 0.5f, 0.5f)));
 	mainCam.materials.push_back(new LambertianMat(Color(0.9f, 0.3f, 0.3f)));
 	mainCam.materials.push_back(new LambertianMat(Color(0.2f, 0.8f, 0.2f)));
+	mainCam.materials.push_back(new DielectricMat(1.1f));
 	mainCam.m_verticalFOV = 20;
 	mainCam.m_position = Vec3Single(13, 2, 3);
 	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
@@ -263,6 +265,7 @@ void main() {
 		ImGui::End();
 
 		dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time)*0.5+0.5;
+		dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time*0.6)*2;
 
 		std::vector<Vec3Single> frame = mainCam.Render(scene);
 
