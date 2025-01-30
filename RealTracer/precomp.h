@@ -1,4 +1,6 @@
 #pragma once
+#include "xsimd/xsimd.hpp"
+namespace xs = xsimd;
 #include <cstdlib>
 #include <cmath>
 #include <iostream>

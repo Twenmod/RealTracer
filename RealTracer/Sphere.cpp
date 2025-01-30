@@ -1,43 +1,63 @@
 #include "precomp.h"
 #include "Common.h"
 #include "Sphere.h"
+#include "Material.h"
 
-Sphere::Sphere(Material& _material, const Point3 _position, float _radius) :
-	m_material(_material)
+Sphere::Sphere(E_MATERIALS _material, float _posX, float _posY, float _posZ, float _radius)
 {
-	m_position = _position;
-	m_radius = abs(_radius);
+	material = _material;
+	posX = _posX;
+	posY = _posY;
+	posZ = _posZ;
+	radius = _radius;
 }
 
-bool Sphere::Intersect(const Ray& _ray, Interval _rayT, HitInfo& _outHit) const
+xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _rayT, HitInfoGroup& _outHit) const
 {
-	Vec3 oc = m_position - _ray.GetOrigin();
-	float a = _ray.GetDirection().Length2();
-	float h = dot(_ray.GetDirection(), oc);
-	float c = oc.Length2() - m_radius * m_radius;
-	float discriminant = h * h - a * c;
+	Vec3 oc;
+	oc.x = posX - _ray.origin.x;
+	oc.y = posY - _ray.origin.y;
+	oc.z = posZ - _ray.origin.z;
+	xs::batch<float> a = _ray.direction.Length2();
+	xs::batch<float> h = Dot(_ray.direction, oc);
+	xs::batch<float> c = oc.Length2() - radius * radius;
+	xs::batch<float> discriminant = h * h - a * c;
 
-	if (discriminant < 0)
+	xs::batch_bool<float> noIntersection = discriminant < xs::batch<float>(0.f);
+
+	//All miss
+	if (xs::all(noIntersection))
 	{
-		return false;
+		return !noIntersection;
 	}
 
-	float sqrtd = std::sqrt(discriminant);
+	xs::batch<float> sqrtd = xs::sqrt(discriminant);
 
 	//Find nearest root
-	float root = (h - sqrtd) / a;
-	if (!_rayT.Surrounds(root))
+	xs::batch<float> root1 = (h - sqrtd) / a;
+	xs::batch_bool<float> root1Valid = _rayT.Surrounds(root1);
+
+	xs::batch<float> root2 = (h + sqrtd) / a;
+	xs::batch_bool<float> root2Valid = _rayT.Surrounds(root2);
+
+	xs::batch<float> root = xs::select(root1Valid, root1, root2);
+	xs::batch_bool<float> validRoot = root1Valid || root2Valid;
+
+	if (xs::all(!validRoot))
 	{
-		root = (h + sqrtd) / a;
-		if (!_rayT.Surrounds(root))
-			return false;
+		return validRoot;
 	}
 
-	_outHit.m_t = root;
+	_outHit.t = root;
+	
 	Vec3 point = _ray.At(root);
-	_outHit.m_point = point;
-	Vec3 outNormal = (point -m_position) / m_radius;
+	_outHit.point = point;
+	Vec3 outNormal;
+	outNormal.x = (point.x - posX) / radius;
+	outNormal.y = (point.y - posY) / radius;
+	outNormal.z = (point.z - posZ) / radius;
 	_outHit.SetNormal(_ray, outNormal);
-	_outHit.m_material = &m_material;
-	return true;
+	_outHit.material = material;
+	return validRoot;
 }
+

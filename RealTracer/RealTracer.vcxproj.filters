@@ -109,5 +109,8 @@
     <ClInclude Include="Jobmanager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Vec3Single.h">
+      <Filter>Source Files\Math</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

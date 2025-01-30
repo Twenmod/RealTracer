@@ -1,5 +1,6 @@
 #pragma once
 #include "precomp.h"
+#include "common.h"
 using uint = unsigned int;
 
 
@@ -32,6 +33,28 @@ inline uint RandomUInt()
 inline float RandomFloat() { return RandomUInt() * 2.3283064365387e-10f; }
 inline float Rand(float range) { return RandomFloat() * range; }
 inline uint RandInt(uint range) { return RandomUInt() % range; }
+
+
+inline xs::batch<float> RandomBatch()
+{
+	std::array<float, SIMD_SIZE> values;
+	for (size_t i = 0; i < SIMD_SIZE; i++)
+	{
+		values[i] = RandomFloat();
+	}
+	return xsimd::batch<float>::load_unaligned(values.data());
+}
+
+inline xs::batch<float> RandomBatch(xs::batch<float> _range)
+{
+	return RandomBatch() * _range;
+}
+inline xs::batch<float> RandomBatch(xs::batch<float> min, xs::batch<float> max)
+{
+	return min + (max-min) * RandomBatch();
+}
+
+
 
 //Range is [min, max)
 inline float Rand(float min, float max)

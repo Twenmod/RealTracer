@@ -3,15 +3,26 @@
 
 class Material;
 
-class HitInfo
+class HitInfoGroup
 {
 public:
-	Point3 m_point;
-	Vec3 m_normal;
-	Material* m_material;
-	float m_t;
-	bool m_frontFace;
-	void SetNormal(const Ray& ray, const Vec3& normal);
+	HitInfoGroup() {};
+
+	Vec3 point;
+	Vec3 normal;
+	xs::batch<float> t;
+	xs::batch_bool<float> frontFace;
+	xs::batch<int> material;
+
+	void SetNormal(const RayGroup& _ray, Vec3 _normal)
+	{
+		xs::batch<float> dots = Dot(_ray.direction, _normal);
+		frontFace = dots < xs::batch<float>(0.f);
+		normal.x = xs::select(frontFace, _normal.x, -_normal.x);
+		normal.y = xs::select(frontFace, _normal.y, -_normal.y);
+		normal.z = xs::select(frontFace, _normal.z, -_normal.z);
+	}
+
 };
 
 
@@ -20,6 +31,6 @@ class Hittable
 public:
 	virtual ~Hittable() = default;
 
-	virtual bool Intersect(const Ray& ray, Interval rayT, HitInfo& outHit) const = 0;
+	virtual xs::batch_bool<float> Intersect(const RayGroup& ray, IntervalGroup rayT, HitInfoGroup& outHit) const = 0;
 };
 

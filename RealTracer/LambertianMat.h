@@ -6,7 +6,7 @@ class LambertianMat :
 public:
 	LambertianMat(const Color& albedo);
 
-	bool Scatter(const Ray& rayIn, const HitInfo& hitInfo, Color& attentuation, Ray& rayOut) const override;
+	bool Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, Color& attentuation, RayGroup& rayOut) const override;
 
 private:
 	Color m_albedo;
