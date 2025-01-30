@@ -28,6 +28,7 @@ protected:
 public:
 	~JobManager();
 	static void CreateJobManager(unsigned int numThreads);
+	static void DeleteJobManager();
 	static JobManager* GetJobManager();
 	static void GetProcessorCount(uint& cores, uint& logical);
 	void AddJob2(Job* a_Job);

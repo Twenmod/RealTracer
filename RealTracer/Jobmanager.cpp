@@ -68,6 +68,11 @@ void JobManager::CreateJobManager(unsigned int numThreads)
 	m_JobManager->m_JobCount = 0;
 }
 
+void JobManager::DeleteJobManager()
+{
+	delete m_JobManager;
+}
+
 void JobManager::AddJob2(Job* a_Job)
 {
 	m_JobList[m_JobCount++] = a_Job;

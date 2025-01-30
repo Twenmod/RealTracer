@@ -20,6 +20,32 @@ int main()
 	Material* glassAirBubble = new DielectricMat(1.f/1.5f);
 	Material* metalRight = new MetalMat(Color(0.8f, 0.2f, 0.8f), 1.f);
 
+Logger::CreateLogger();
+
+//Set up a window
+if (!glfwInit())
+{
+	Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Material* mat = new LambertianMat(Color(0.5f, 0.5f, 0.5f));
+	Material* mat2 = new LambertianMat(Color(0.8f, 0.5f, 0.5f));
+	//Material* glass = new DielectricMat(1.5f);
+	//Material* glassAirBubble = new DielectricMat(1.f/1.5f);
+	//Material* metalRight = new MetalMat(Color(0.8f, 0.2f, 0.8f), 1.f);
+
 	//Scene
 	Scene scene;
 	scene.Add(*new Sphere(*middle,Vec3(0.f, 0.f, -1.f), 0.5f));
@@ -58,11 +84,5 @@ int main()
 	std::clog << "Rendering took: " << (delta.count()) << "s\n";
 
 	while (std::cin.get() != '\n');
-
-
-	delete ground;
-	delete middle;
-	delete glass;
-	delete metalRight;
 
 }

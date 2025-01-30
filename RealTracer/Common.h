@@ -7,8 +7,10 @@ constexpr int IMAGE_HEIGHT = 400u;
 
 //Tracing settings
 
-constexpr uint SAMPLES_PER_PIXEL = 32;
-constexpr uint MAX_BOUNCES = 10;
+//Actual samples is this times your available simd size (1, 4, 8, 16)
+constexpr int SAMPLES_PER_PIXEL = 8;
+
+constexpr int MAX_BOUNCES = 10;
 constexpr float MIN_INTERSECTION_DEPTH = 0.001f;
 
 
