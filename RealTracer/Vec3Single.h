@@ -17,6 +17,10 @@ public:
 	float y() const { return values[1]; }
 	float z() const { return values[2]; }
 
+	void setX(float x) { values[0] = x; }
+	void setY(float y) { values[1] = y; }
+	void setZ(float z) { values[2] = z; }
+
 	Vec3Single operator-() const { return Vec3Single(-values[0], -values[1], -values[2]); }
 	float operator[](int i) const { return values[i]; }
 	float& operator[](int i) { return values[i]; }

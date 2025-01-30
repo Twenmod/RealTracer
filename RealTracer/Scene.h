@@ -8,7 +8,7 @@ public:
 	~Scene();
 	void Add(Hittable& _object) { m_objects.push_back(&_object); }
 	void Clear() { m_objects.clear(); }
-
+	std::vector<Hittable*> GetObjects() { return m_objects; }
 	xs::batch_bool<float> Intersect(const RayGroup& ray, IntervalGroup rayT, HitInfoGroup& outHit) const override;
 
 private:

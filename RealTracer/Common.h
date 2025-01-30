@@ -3,14 +3,14 @@
 namespace xs = xsimd;
 
 //Image settings
-constexpr int IMAGE_WIDTH = 780u;
+constexpr int IMAGE_WIDTH = 700u;
 constexpr int IMAGE_HEIGHT = 400u;
 
 
 //Tracing settings
 
 //Actual samples is this times your available simd size (1, 4, 8, 16)
-constexpr int SAMPLES_PER_PIXEL = 8;
+constexpr int SAMPLES_PER_PIXEL = 2;
 
 constexpr int MAX_BOUNCES = 10;
 constexpr float MIN_INTERSECTION_DEPTH = 0.001f;

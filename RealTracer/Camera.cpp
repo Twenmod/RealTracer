@@ -14,7 +14,7 @@ Camera::Camera(Vec3Single _position)
 	m_position = _position;
 }
 
-void Camera::Render(const Hittable& scene)
+std::vector<Vec3Single> Camera::Render(const Hittable& scene)
 {
 	Initialize();
 
@@ -22,20 +22,8 @@ void Camera::Render(const Hittable& scene)
 	JobManager* jobManager = JobManager::GetJobManager();
 
 	std::vector<RayJob*> jobs;
-	float* pixelsR;
-	float* pixelsG;
-	float* pixelsB;
-	pixelsR = new float[IMAGE_WIDTH * IMAGE_HEIGHT];
-	pixelsG = new float[IMAGE_WIDTH * IMAGE_HEIGHT];
-	pixelsB = new float[IMAGE_WIDTH * IMAGE_HEIGHT];
 
-	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
-	{
-		pixelsR[i] = 0;
-		pixelsG[i] = 0;
-		pixelsB[i] = 0;
-	}
-
+	std::vector<Vec3Single> pixels(IMAGE_WIDTH * IMAGE_HEIGHT);
 
 	int maxThreads = jobManager->MaxConcurrent();
 	int pixelsPerThread = floor((IMAGE_WIDTH * IMAGE_HEIGHT) / maxThreads);
@@ -54,9 +42,8 @@ void Camera::Render(const Hittable& scene)
 		//std::clog << "start with x" << job->x << " y" << job->y << " till x" << xPos << " y" << yPos << '\n';
 
 		job->pixelAmount = std::min(pixelsPerThread, IMAGE_WIDTH * IMAGE_HEIGHT - jobIndex);
-		job->pixelsR = pixelsR;
-		job->pixelsG = pixelsG;
-		job->pixelsB = pixelsB;
+		job->pixels = &pixels;
+
 #ifdef MULTITHREAD
 		jobManager->AddJob2(job);
 #endif
@@ -74,13 +61,9 @@ void Camera::Render(const Hittable& scene)
 #endif
 		delete jobs[i];
 	}
-	std::cout << "P3\n" << IMAGE_WIDTH << ' ' << IMAGE_HEIGHT << "\n255\n";
 
-	for (int x = 0; x < IMAGE_WIDTH * IMAGE_HEIGHT; x++)
-	{
-		WriteColor(std::cout, pixelsR[x], pixelsG[x], pixelsB[x]);
-	}
-	std::clog << "\rDone.                 \n";
+	return pixels;
+
 }
 
 RayGroup Camera::GetRay(xs::batch<float> _pixelX, xs::batch<float> _pixelY) const
@@ -208,9 +191,7 @@ void RayJob::Main()
 			pixelColor += rayColors;
 		}
 
-		float& outR = pixelsR[pos];
-		float& outG = pixelsG[pos];
-		float& outB = pixelsB[pos];
+		Vec3Single& outColor = (*pixels)[pos];
 		float pixelColorR = 0;
 		float pixelColorG = 0;
 		float pixelColorB = 0;
@@ -222,21 +203,8 @@ void RayJob::Main()
 			pixelColorB += pixelColor.z.get(i);
 		}
 
-		outR = pixelColorR * PIXEL_SAMPLES_SCALE;
-		outG = pixelColorG * PIXEL_SAMPLES_SCALE;
-		outB = pixelColorB * PIXEL_SAMPLES_SCALE;
-
-		//		Color pixelColor(0.f);
-//		for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; sample++)
-//		{
-//			Ray ray = GetRay(i, j);
-//			pixelColor += ShootRay(ray, MAX_BOUNCES, scene);
-//		}
-//		WriteColor(std::cout, pixelColor*PIXEL_SAMPLES_SCALE);
-
-
-		// Update the color values for this pixel
-
-
+		outColor.setX(pixelColorR * PIXEL_SAMPLES_SCALE);
+		outColor.setY(pixelColorG * PIXEL_SAMPLES_SCALE);
+		outColor.setZ(pixelColorB * PIXEL_SAMPLES_SCALE);
 	}
 }
