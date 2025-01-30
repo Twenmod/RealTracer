@@ -32,7 +32,7 @@ std::clog << "\x1B[36mSystem: \n"
 << "   Logical: " << logical << '\n'
 << "  Threads: " << JobManager::GetJobManager()->MaxConcurrent() << '\n'
 << "  SIMD size: " << SIMD_SIZE << '\n'
-<< "Settings:"
+<< "Settings: \n"
 << "  Image Size: " << IMAGE_WIDTH << "x" << IMAGE_HEIGHT << '\n'
 << "  Samples: " << SAMPLES_PER_PIXEL*SIMD_SIZE << '\n';
 
