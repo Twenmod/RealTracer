@@ -48,9 +48,6 @@ __________              ._____________
 
 	Logger::CreateLogger();
 
-	int WINDOW_WIDTH = IMAGE_WIDTH;
-	int WINDOW_HEIGHT = IMAGE_HEIGHT;
-
 	//Set up a window
 	if (!glfwInit())
 	{
@@ -206,8 +203,6 @@ void main() {
 	glUniform1i(glGetUniformLocation(screenShader, "image"), 0);
 	glBindVertexArray(screenVAO);
 
-	Material* mat = new LambertianMat(Color(0.5f, 0.5f, 0.5f));
-	Material* mat2 = new LambertianMat(Color(0.8f, 0.5f, 0.5f));
 	//Material* glass = new DielectricMat(1.5f);
 	//Material* glassAirBubble = new DielectricMat(1.f/1.5f);
 	//Material* metalRight = new MetalMat(Color(0.8f, 0.2f, 0.8f), 1.f);
@@ -215,14 +210,16 @@ void main() {
 	//Scene
 	Scene scene;
 	scene.Add(*new Sphere(diffuse, 0.f, 0.f, 1.f, 0.5f));
-	scene.Add(*new Sphere(diffuse, 2.f, 0.f, -1.f, 0.5f));
+	scene.Add(*new Sphere(red, 2.f, 0.f, -1.f, 0.5f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
-	scene.Add(*new Sphere(diffuse, 0.f, -100.5f, -1.f, 100.f));
+	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
 
 	//Camera
 	Camera mainCam;
-	mainCam.materials.push_back(mat);
+	mainCam.materials.push_back(new LambertianMat(Color(0.5f, 0.5f, 0.5f)));
+	mainCam.materials.push_back(new LambertianMat(Color(0.9f, 0.3f, 0.3f)));
+	mainCam.materials.push_back(new LambertianMat(Color(0.2f, 0.8f, 0.2f)));
 	mainCam.m_verticalFOV = 20;
 	mainCam.m_position = Vec3Single(13, 2, 3);
 	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
