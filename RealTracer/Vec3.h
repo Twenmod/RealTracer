@@ -129,7 +129,14 @@ inline Vec3 Cross(const Vec3& u, const Vec3& v)
 
 inline Vec3 Normalize(const Vec3& v)
 {
-	return v / v.Length();
+	xs::batch<float> length = v.Length();
+	xs::batch_bool<float> isZero = length <= 0.001f;
+	Vec3 normalized;
+	normalized.x = xs::select(isZero, xs::batch<float>(0.f), v.x / length);
+	normalized.y = xs::select(isZero, xs::batch<float>(0.f), v.y / length);
+	normalized.z = xs::select(isZero, xs::batch<float>(0.f), v.z / length);
+
+	return normalized;
 }
 
 inline Vec3 RandomUnitVector()
@@ -137,8 +144,8 @@ inline Vec3 RandomUnitVector()
 	while (true)
 	{
 		Vec3 vec = Vec3::Random(xs::batch<float>(-1), xs::batch<float>(1));
-		xs::batch<float> length2 = vec.Length2();
-		return vec / sqrt(length2);
+
+		return Normalize(vec);
 	}
 }
 

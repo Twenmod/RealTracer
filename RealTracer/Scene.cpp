@@ -23,16 +23,15 @@ xs::batch_bool<float> Scene::Intersect(const RayGroup& ray, IntervalGroup _rayT,
 		hitAny = hitAny | intersections;
 
 		closestHit = xs::select(intersections, hits.t, closestHit);
-		outHit.point.x = xs::select(intersections, outHit.point.x, hits.point.x);
-		outHit.point.y = xs::select(intersections, outHit.point.y, hits.point.y);
-		outHit.point.z = xs::select(intersections, outHit.point.z, hits.point.z);
-		outHit.normal.x = xs::select(intersections, outHit.normal.x, hits.normal.x);
-		outHit.normal.y = xs::select(intersections, outHit.normal.y, hits.normal.y);
-		outHit.normal.z = xs::select(intersections, outHit.normal.z, hits.normal.z);
+		outHit.point.x = xs::select(intersections,  hits.point.x, outHit.point.x);
+		outHit.point.y = xs::select(intersections, hits.point.y, outHit.point.y);
+		outHit.point.z = xs::select(intersections, hits.point.z, outHit.point.z);
+		outHit.normal.x = xs::select(intersections, hits.normal.x, outHit.normal.x);
+		outHit.normal.y = xs::select(intersections, hits.normal.y, outHit.normal.y);
+		outHit.normal.z = xs::select(intersections, hits.normal.z, outHit.normal.z);
 		outHit.frontFace = intersections & hits.frontFace;
-		outHit.t = xs::select(intersections, outHit.t, hits.t);
-		outHit.material = xs::select(xs::batch_bool_cast<int>(intersections), outHit.material, hits.material);
-		outHit = hits;
+		outHit.t = xs::select(intersections, hits.t, outHit.t);
+		outHit.material = xs::select(xs::batch_bool_cast<int>(intersections), hits.material, outHit.material);
 
 	}
 	return hitAny;

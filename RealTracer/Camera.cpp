@@ -18,7 +18,6 @@ void Camera::Render(const Hittable& scene)
 {
 	Initialize();
 
-	JobManager::CreateJobManager(32);
 
 	JobManager* jobManager = JobManager::GetJobManager();
 
@@ -151,6 +150,9 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float> (0.f), attentuation.x);
 	attentuation.y = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float> (0.f), attentuation.y);
 	attentuation.z = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float> (0.f), attentuation.z);
+
+
+
 	return attentuation;
 
 }
@@ -196,7 +198,14 @@ void RayJob::Main()
 
 			xs::batch<Ray> rayGroup;
 
-			pixelColor += camera->ShootRay(ray, maxBounces, *scene);
+			Color rayColors = camera->ShootRay(ray, maxBounces, *scene);
+			xs::batch_bool<float> isNan = xs::isnan(rayColors.x);
+			rayColors.x = xs::select(isNan, xs::batch<float>(0), rayColors.x);
+			isNan = xs::isnan(rayColors.y);
+			rayColors.y = xs::select(isNan, xs::batch<float>(0), rayColors.y);
+			isNan = xs::isnan(rayColors.z);
+			rayColors.z = xs::select(isNan, xs::batch<float>(0), rayColors.z);
+			pixelColor += rayColors;
 		}
 
 		float& outR = pixelsR[pos];
@@ -205,12 +214,14 @@ void RayJob::Main()
 		float pixelColorR = 0;
 		float pixelColorG = 0;
 		float pixelColorB = 0;
+
 		for (size_t i = 0; i < SIMD_SIZE; i++)
 		{
 			pixelColorR += pixelColor.x.get(i);
 			pixelColorG += pixelColor.y.get(i);
 			pixelColorB += pixelColor.z.get(i);
 		}
+
 		outR = pixelColorR * PIXEL_SAMPLES_SCALE;
 		outG = pixelColorG * PIXEL_SAMPLES_SCALE;
 		outB = pixelColorB * PIXEL_SAMPLES_SCALE;
