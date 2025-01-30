@@ -60,6 +60,26 @@ if (!glfwInit())
 
 
 
+Logger::CreateLogger();
+
+//Set up a window
+if (!glfwInit())
+{
+	Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 	Material* mat = new LambertianMat(Color(0.5f, 0.5f, 0.5f));
 	Material* mat2 = new LambertianMat(Color(0.8f, 0.5f, 0.5f));
 	//Material* glass = new DielectricMat(1.5f);
