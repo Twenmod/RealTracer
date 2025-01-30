@@ -28,16 +28,16 @@ __________              ._____________
 	JobManager::GetProcessorCount(cores, logical);
 	JobManager::CreateJobManager(logical*2);
 std::clog << "\x1B[36mSystem: \n"
-<< "  Cores: " << cores << '\n'
-<< "   Logical: " << logical << '\n'
-<< "  Threads: " << JobManager::GetJobManager()->MaxConcurrent() << '\n'
-<< "  SIMD size: " << SIMD_SIZE << '\n'
-<< "Settings: \n"
-<< "  Image Size: " << IMAGE_WIDTH << "x" << IMAGE_HEIGHT << '\n'
-<< "  Samples: " << SAMPLES_PER_PIXEL*SIMD_SIZE << '\n';
-
+<< "\x1B[36m  Cores: \x1B[96m" << cores << '\n'
+<< "\x1B[36m   Logical: \x1B[96m" << logical << '\n'
+<< "\x1B[36m  Threads: \x1B[96m" << JobManager::GetJobManager()->MaxConcurrent() << '\n'
+<< "\x1B[36m  SIMD size\x1B[96m: " << SIMD_SIZE << '\n'
+<< "\x1B[36mSettings: \n"
+<< "\x1B[36m  Image Size\x1B[96m: " << IMAGE_WIDTH << "x" << IMAGE_HEIGHT << '\n'
+<< "\x1B[36m  Samples: \x1B[96m" << SAMPLES_PER_PIXEL*SIMD_SIZE << '\n';
 
 	Material* mat = new LambertianMat(Color(0.5f, 0.5f, 0.5f));
+	Material* mat2 = new LambertianMat(Color(0.8f, 0.5f, 0.5f));
 	//Material* glass = new DielectricMat(1.5f);
 	//Material* glassAirBubble = new DielectricMat(1.f/1.5f);
 	//Material* metalRight = new MetalMat(Color(0.8f, 0.2f, 0.8f), 1.f);
@@ -65,7 +65,7 @@ std::clog << "\x1B[36mSystem: \n"
 	
 	auto time = std::chrono::system_clock::now();
 
-	std::clog << "\x1b[96mStarting Render ";
+	std::clog << "\x1b[0mStarting Render ";
 #ifdef MULTITHREAD
 	std::clog << "on " << JobManager::GetJobManager()->MaxConcurrent() << " threads";
 #endif

@@ -23,6 +23,7 @@ constexpr float MIN_INTERSECTION_DEPTH = 0.001f;
 enum E_MATERIALS
 {
 	diffuse,
+	red,
 };
 
 
