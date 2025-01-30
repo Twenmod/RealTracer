@@ -14,51 +14,27 @@
 
 int main()
 {
-	Material* ground = new LambertianMat(Color(0.0f, 0.8f, 0.f));
-	Material* middle = new LambertianMat(Color(0.3f, 0.3f, 0.f));
-	Material* glass = new DielectricMat(1.5f);
-	Material* glassAirBubble = new DielectricMat(1.f/1.5f);
-	Material* metalRight = new MetalMat(Color(0.8f, 0.2f, 0.8f), 1.f);
-
-Logger::CreateLogger();
-
-//Set up a window
-if (!glfwInit())
-{
-	Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-Logger::CreateLogger();
-
-//Set up a window
-if (!glfwInit())
-{
-	Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
-}
-
-
-
-
-
-
-
-
-
-
-
-
+	std::clog << "\x1B[35m" << R"(
+Starting:
+__________              ._____________                                 
+\______   \ ____ _____  |  \__    ___/___________    ____  ___________ 
+ |       _// __ \\__  \ |  | |    |  \_  __ \__  \ _/ ___\/ __ \_  __ \
+ |    |   \  ___/ / __ \|  |_|    |   |  | \// __ \\  \__\  ___/|  | \/
+ |____|_  /\___  >____  /____/____|   |__|  (____  /\___  >___  >__|   
+        \/     \/     \/                         \/     \/    \/       
+)";
+	uint cores = 0;
+	uint logical = 0;
+	JobManager::GetProcessorCount(cores, logical);
+	JobManager::CreateJobManager(logical*2);
+std::clog << "\x1B[36mSystem: \n"
+<< "\x1B[36m  Cores: \x1B[96m" << cores << '\n'
+<< "\x1B[36m   Logical: \x1B[96m" << logical << '\n'
+<< "\x1B[36m  Threads: \x1B[96m" << JobManager::GetJobManager()->MaxConcurrent() << '\n'
+<< "\x1B[36m  SIMD size\x1B[96m: " << SIMD_SIZE << '\n'
+<< "\x1B[36mSettings: \n"
+<< "\x1B[36m  Image Size\x1B[96m: " << IMAGE_WIDTH << "x" << IMAGE_HEIGHT << '\n'
+<< "\x1B[36m  Samples: \x1B[96m" << SAMPLES_PER_PIXEL*SIMD_SIZE << '\n';
 
 Logger::CreateLogger();
 
@@ -88,28 +64,20 @@ if (!glfwInit())
 
 	//Scene
 	Scene scene;
-	scene.Add(*new Sphere(*middle,Vec3(0.f, 0.f, -1.f), 0.5f));
-	scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
-	scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
-	scene.Add(*new Sphere(*ground,Vec3(0.f, -100.5f, -1.f), 100.f));
-
-	for (size_t i = 0; i < 100; i++)
-	{
-		Point3 pos = Point3(Rand(-5.f, 5.f), -0.42f, Rand(-5.f, 5.f));
-		Material* mat = new LambertianMat(Color(RandomFloat(), RandomFloat(), RandomFloat()));
-
-		scene.Add(*new Sphere(*mat, pos, 0.15f));
-
-
-	}
+	scene.Add(*new Sphere(diffuse,0.f, 0.f, -2.f, 0.5f));
+	scene.Add(*new Sphere(diffuse,2.f, 0.f, -1.f, 0.5f));
+	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
+	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
+	scene.Add(*new Sphere(diffuse,0.f, -100.5f, -1.f, 100.f));
 
 	//Camera
 	Camera mainCam;
+	mainCam.materials.push_back(mat);
 	mainCam.m_verticalFOV = 20;
-	mainCam.m_position = Point3(13, 2, 3);
-	mainCam.m_direction = Normalize(Point3(0, 0, 0) - mainCam.m_position);
+	mainCam.m_position = Vec3Single(13, 2, 3);
+	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
 	
-	mainCam.m_defocusAngle = 0.6f;
+	mainCam.m_defocusAngle = 0.0f;
 	mainCam.m_focusDistance = 10.0f;
 
 	// Render
@@ -117,6 +85,11 @@ if (!glfwInit())
 	
 	auto time = std::chrono::system_clock::now();
 
+	std::clog << "\x1b[0mStarting Render ";
+#ifdef MULTITHREAD
+	std::clog << "on " << JobManager::GetJobManager()->MaxConcurrent() << " threads";
+#endif
+	std::clog << '\n';
 
 	mainCam.Render(scene);
 

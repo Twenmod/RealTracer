@@ -13,11 +13,11 @@ inline float LinearToGammaSpace(float _linear)
 	return 0;
 }
 
-inline void WriteColor(std::ostream& out, const Color& pixel_color)
+inline void WriteColor(std::ostream& out, float _r, float _g, float _b)
 {
-	auto r = LinearToGammaSpace(pixel_color.x());
-	auto g = LinearToGammaSpace(pixel_color.y());
-	auto b = LinearToGammaSpace(pixel_color.z());
+	auto r = LinearToGammaSpace(_r);
+	auto g = LinearToGammaSpace(_g);
+	auto b = LinearToGammaSpace(_b);
 
 	// Translate the [0,1] component values to the byte range [0,255].
 	static const Interval intensity(0.f, 0.999f);

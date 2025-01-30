@@ -2,6 +2,7 @@
 #include "precomp.h"
 
 #include "Vec3.h"
+#include "Vec3Single.h"
 #include "Color.h"
 #include "Random.h"
 
@@ -22,14 +23,14 @@ inline float RadToDeg(float radians)
 
 
 
-inline float Lerp(float start, float end, float a)
+inline xs::batch<float> Lerp(xs::batch<float> start, xs::batch<float> end, xs::batch<float> a)
 {
 	return(1 - a) * start + a * end;
 }
-inline Vec3 Lerp(Vec3 start, Vec3 end, float a)
+inline Vec3 Lerp(Vec3 start, Vec3 end, xs::batch<float> a)
 {
-	float x = Lerp(start.x(), end.x(), a);
-	float y = Lerp(start.y(), end.y(), a);
-	float z = Lerp(start.z(), end.z(), a);
+	xs::batch<float> x = Lerp(start.x, end.x, a);
+	xs::batch<float> y = Lerp(start.y, end.y, a);
+	xs::batch<float> z = Lerp(start.z, end.z, a);
 	return Vec3(x, y, z);
 }

@@ -7,13 +7,18 @@ Ray::Ray()
 {
 }
 
-Ray::Ray(const Point3& _origin, const Vec3& _direction) :
-	m_origin(_origin),
-	m_direction(_direction)
+Ray::Ray(const xs::batch<float>& _origin, const xs::batch<float>& _direction) :
+	origin(_origin),
+	direction(_direction)
 {
 }
 
-Point3 Ray::At(float t) const
+xs::batch<float> Ray::At(float t) const
 {
-	return m_origin + m_direction * t;
+	return origin + direction * t;
+}
+
+Vec3 RayGroup::At(xs::batch<float> t) const
+{
+	return origin + direction * t;
 }
