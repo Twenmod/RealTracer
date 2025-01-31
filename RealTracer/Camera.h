@@ -20,6 +20,7 @@ public:
 	std::vector<Vec3Single>* pixels;
 	const Hittable* scene;
 	int pixelAmount;
+	int samples;
 };
 
 
@@ -28,7 +29,7 @@ class Camera
 public:
 	Camera(Vec3Single position = Vec3Single(0.f));
 
-	std::vector<Vec3Single> Render(const Hittable& scene);
+	std::vector<Vec3Single> Render(const Hittable& scene, int sample);
 
 	float m_defocusAngle = 3;
 	float m_focusDistance = 1;

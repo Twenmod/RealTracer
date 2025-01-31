@@ -24,6 +24,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 int main()
 {
+
+
 	std::clog << "\x1B[35m" << R"(
 Starting:
 __________              ._____________                                 
@@ -234,18 +236,12 @@ void main() {
 	double lastTime = glfwGetTime();
 	std::vector<unsigned char> frameTextureData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 
-	//first render
-	std::vector<Vec3Single> frame = mainCam.Render(scene);
+	bool accumulatorOn = true;
+	bool animate = true;
+	int samples = SAMPLES_PER_PIXEL;
 
-	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
-	{
-		Vec3Single frameColor = frame[i];
-		frameTextureData[i * 3 + 0] = frameColor.x() * 0xff;  // R
-		frameTextureData[i * 3 + 1] = frameColor.y() * 0xff;  // G
-		frameTextureData[i * 3 + 2] = frameColor.z() * 0xff;  // B	
-	}
-
-
+	float overrideTreshold = 0xff * 0.1f;
+	float smoothingFactor = 0.05f;
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -259,8 +255,9 @@ void main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui_ImplOpenGL3_NewFrame();
 
+
 		static bool open = true;
-		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_Appearing);
 		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
 		ImGui::Begin("Debug", &open);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
@@ -277,35 +274,70 @@ void main() {
 
 			ImGui::TreePop();
 		}
+		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+		if (ImGui::TreeNode("Settings"))
+		{
+			ImGui::Checkbox("Animate", &animate);
+			ImGui::SliderInt("Samples", &samples, 1, 64, (std::to_string(samples* SIMD_SIZE).c_str()));
+			ImGui::Checkbox("Accumulator", &accumulatorOn);
+			if (accumulatorOn)
+			{
+				float baseTreshold = overrideTreshold / 0xff;
+				if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0, 1, "%.2f"))
+				{
+					overrideTreshold = baseTreshold * 0xff;
+				}
+				float invSmooth = 1.f - smoothingFactor;
+				if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 1, "%.2f"))
+				{
+					smoothingFactor = 1.f - invSmooth;
+				}
+			}
+			ImGui::TreePop();
+		}
 		ImGui::End();
 
-		dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time) * 0.5 + 0.5;
-		dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time * 0.6) * 2;
-
-		std::vector<Vec3Single> frame = mainCam.Render(scene);
-		const float overrideTreshold = 0xff * 0.08f;
-		const float smoothingFactor = 0.03f;
+		if (animate)
+		{
+			dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time) * 0.5 + 0.5;
+			dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time * 0.6) * 2;
+		}
+		std::vector<Vec3Single> frame = mainCam.Render(scene, samples);
 		for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 		{
 			Vec3Single frameColor = frame[i];
 			float r = frameColor.x() * 0xff;
-			float oldr = frameTextureData[i * 3 + 0];
-			if (abs(r - oldr) > overrideTreshold)
-				frameTextureData[i * 3 + 0] = r;  // r
-			else
-				frameTextureData[i * 3 + 0] = oldr * (1.f - smoothingFactor) + r * smoothingFactor;  // G			
 			float g = frameColor.y() * 0xff;
-			float oldg = frameTextureData[i * 3 + 1];
-			if(abs(g-oldg) > overrideTreshold)
-				frameTextureData[i * 3 + 1] = g;  // G
-			else
-				frameTextureData[i * 3 + 1] = oldg * (1.f - smoothingFactor) + g * smoothingFactor;  // G
 			float b = frameColor.z() * 0xff;
-			float oldb = frameTextureData[i * 3 + 2];
-			if (abs(b - oldb) > overrideTreshold)
-				frameTextureData[i * 3 + 2] = b;  // b
+			if (accumulatorOn)
+			{
+				float oldr = frameTextureData[i * 3 + 0];
+				float oldg = frameTextureData[i * 3 + 1];
+				float oldb = frameTextureData[i * 3 + 2];
+				float colorDistance = std::sqrt(
+					(r - oldr) * (r - oldr) +
+					(g - oldg) * (g - oldg) +
+					(b - oldb) * (b - oldb)
+				);
+				if (colorDistance > overrideTreshold)
+				{ // override
+					frameTextureData[i * 3 + 0] = r;  // r
+					frameTextureData[i * 3 + 1] = g;  // G
+					frameTextureData[i * 3 + 2] = b;  // b
+				}
+				else
+				{ // accumalate
+					frameTextureData[i * 3 + 0] = oldr * (1.f - smoothingFactor) + r * smoothingFactor;  // G			
+					frameTextureData[i * 3 + 1] = oldg * (1.f - smoothingFactor) + g * smoothingFactor;  // G
+					frameTextureData[i * 3 + 2] = oldb * (1.f - smoothingFactor) + b * smoothingFactor;  // b
+				}
+			}
 			else
-				frameTextureData[i * 3 + 2] = oldb * (1.f - smoothingFactor) + b * smoothingFactor;  // b
+			{
+				frameTextureData[i * 3 + 0] = r;  // r
+				frameTextureData[i * 3 + 1] = g;  // G
+				frameTextureData[i * 3 + 2] = b;  // b
+			}
 		}
 
 

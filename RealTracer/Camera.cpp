@@ -14,7 +14,7 @@ Camera::Camera(Vec3Single _position)
 	m_position = _position;
 }
 
-std::vector<Vec3Single> Camera::Render(const Hittable& scene)
+std::vector<Vec3Single> Camera::Render(const Hittable& scene, int samples)
 {
 	Initialize();
 
@@ -42,6 +42,7 @@ std::vector<Vec3Single> Camera::Render(const Hittable& scene)
 		//std::clog << "start with x" << job->x << " y" << job->y << " till x" << xPos << " y" << yPos << '\n';
 
 		job->pixelAmount = std::min(pixelsPerThread, IMAGE_WIDTH * IMAGE_HEIGHT - jobIndex);
+		job->samples = samples;
 		job->pixels = &pixels;
 
 #ifdef MULTITHREAD
@@ -175,7 +176,7 @@ void RayJob::Main()
 		int xPos = pos - yPos * IMAGE_WIDTH;
 
 		Color pixelColor(0);
-		for (size_t sample = 0; sample < SAMPLES_PER_PIXEL; sample++)
+		for (size_t sample = 0; sample < samples; sample++)
 		{
 			RayGroup ray = camera->GetRay(xPos, yPos);
 
@@ -196,9 +197,10 @@ void RayJob::Main()
 			pixelColorG += pixelColor.y.get(i);
 			pixelColorB += pixelColor.z.get(i);
 		}
+		float sampleScale = (1.f / (static_cast<float>(samples))) / SIMD_SIZE;
 
-		outColor.setX(pixelColorR * PIXEL_SAMPLES_SCALE);
-		outColor.setY(pixelColorG * PIXEL_SAMPLES_SCALE);
-		outColor.setZ(pixelColorB * PIXEL_SAMPLES_SCALE);
+		outColor.setX(pixelColorR * sampleScale);
+		outColor.setY(pixelColorG * sampleScale);
+		outColor.setZ(pixelColorB * sampleScale);
 	}
 }
