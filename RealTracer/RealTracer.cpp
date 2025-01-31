@@ -38,7 +38,7 @@ __________              ._____________
 	uint cores = 0;
 	uint logical = 0;
 	JobManager::GetProcessorCount(cores, logical);
-	JobManager::CreateJobManager(logical * 2);
+	JobManager::CreateJobManager(logical*2);
 	std::clog << "\x1B[36mSystem: \n"
 		<< "\x1B[36m  Cores: \x1B[96m" << cores << '\n'
 		<< "\x1B[36m   Logical: \x1B[96m" << logical << '\n'
@@ -83,8 +83,10 @@ __________              ._____________
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 	ImGuiIO io = ImGui::GetIO();
+	io.DisplaySize = ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT);
 	io.Fonts->AddFontDefault();  // Ensure the default font is loaded
 	io.Fonts->Build();  // Build the font atlas
+
 
 	unsigned char* tex_pixels;
 	int tex_width, tex_height;
@@ -244,7 +246,15 @@ if (denoise) {
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, frameTexture);
-
+	uint frameNormalTexture;
+	glGenTextures(1, &frameNormalTexture);
+	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
 
 	//Material* glass = new DielectricMat(1.5f);
 	//Material* glassAirBubble = new DielectricMat(1.f/1.5f);
@@ -277,10 +287,13 @@ if (denoise) {
 	std::vector<float> frameRates(30, 0.f);
 	double lastTime = glfwGetTime();
 	std::vector<unsigned char> frameTextureData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
+	std::vector<unsigned char> frameNormalData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 
 	bool accumulatorOn = true;
 	bool animate = true;
-	bool denoise = true;
+	bool denoise = false;
+	bool showNormals = false;
+	bool showChange = false;
 
 	int samples = SAMPLES_PER_PIXEL;
 
@@ -295,13 +308,13 @@ if (denoise) {
 		frameRates.push_back(1.f / deltaTime);
 		lastTime = time;
 
-		ImGui::NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui_ImplOpenGL3_NewFrame();
+		ImGui::NewFrame();
 
 
 		static bool open = true;
-		ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSize(ImVec2(220, 400), ImGuiCond_Appearing);
 		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
 		ImGui::Begin("Debug", &open);
 		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
@@ -340,6 +353,16 @@ if (denoise) {
 			ImGui::Checkbox("Denoise", &denoise);
 			ImGui::TreePop();
 		}
+		if (ImGui::TreeNode("Debug"))
+		{
+			ImGui::Checkbox("Show Normals", &showNormals);
+			if (accumulatorOn)
+			{
+				ImGui::Text("Accumulator");
+				ImGui::Checkbox("Draw Updates", &showChange);
+			}
+			ImGui::TreePop();
+		}
 		ImGui::End();
 
 		if (animate)
@@ -347,28 +370,48 @@ if (denoise) {
 			dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time) * 0.5 + 0.5;
 			dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time * 0.6) * 2;
 		}
-		std::vector<Vec3Single> frame = mainCam.Render(scene, samples);
+
+		std::vector<Vec3Single> frameNormal(IMAGE_WIDTH*IMAGE_HEIGHT);
+		std::vector<Vec3Single> frame = mainCam.Render(scene, samples, &frameNormal);
+
 		for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 		{
 			Vec3Single frameColor = frame[i];
+			if (showNormals) frameColor = frameNormal[i];
+			Vec3Single frameNormalColor = frameNormal[i];
 			float r = frameColor.x() * 0xff;
 			float g = frameColor.y() * 0xff;
 			float b = frameColor.z() * 0xff;
+			float nR = frameNormalColor.x() * 0xff;
+			float nG = frameNormalColor.y() * 0xff;
+			float nB = frameNormalColor.z() * 0xff;
 			if (accumulatorOn)
 			{
 				float oldr = frameTextureData[i * 3 + 0];
 				float oldg = frameTextureData[i * 3 + 1];
 				float oldb = frameTextureData[i * 3 + 2];
-				float colorDistance = std::sqrt(
-					(r - oldr) * (r - oldr) +
-					(g - oldg) * (g - oldg) +
-					(b - oldb) * (b - oldb)
+				float oldNormalR = frameNormalData[i * 3 + 0];
+				float oldNormalB = frameNormalData[i * 3 + 2];
+				float oldNormalG = frameNormalData[i * 3 + 1];
+				float normalDistance = std::sqrt(
+					(nR - oldNormalR) * (nR - oldNormalR) +
+					(nG - oldNormalG) * (nG - oldNormalG) +
+					(nB - oldNormalB) * (nB - oldNormalB)
 				);
-				if (colorDistance > overrideTreshold)
+				if (normalDistance > overrideTreshold)
 				{ // override
-					frameTextureData[i * 3 + 0] = r;  // r
-					frameTextureData[i * 3 + 1] = g;  // G
-					frameTextureData[i * 3 + 2] = b;  // b
+					if (showChange)
+					{
+						frameTextureData[i * 3 + 0] = 0xff;  // r
+						frameTextureData[i * 3 + 1] = 0;  // G
+						frameTextureData[i * 3 + 2] = 0;  // b
+					}
+					else
+					{
+						frameTextureData[i * 3 + 0] = r;  // r
+						frameTextureData[i * 3 + 1] = g;  // G
+						frameTextureData[i * 3 + 2] = b;  // b
+					}
 				}
 				else
 				{ // accumalate
@@ -383,6 +426,11 @@ if (denoise) {
 				frameTextureData[i * 3 + 1] = g;  // G
 				frameTextureData[i * 3 + 2] = b;  // b
 			}
+
+			frameNormalData[i * 3 + 0] = nR;  // r
+			frameNormalData[i * 3 + 1] = nG;  // G
+			frameNormalData[i * 3 + 2] = nB;  // b
+
 		}
 
 		glUseProgram(screenShader);

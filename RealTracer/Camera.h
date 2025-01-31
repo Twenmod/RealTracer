@@ -18,6 +18,7 @@ public:
 	int pixelPos;
 	uint maxBounces;
 	std::vector<Vec3Single>* pixels;
+	std::vector<Vec3Single>* primaryNormals;
 	const Hittable* scene;
 	int pixelAmount;
 	int samples;
@@ -29,7 +30,7 @@ class Camera
 public:
 	Camera(Vec3Single position = Vec3Single(0.f));
 
-	std::vector<Vec3Single> Render(const Hittable& scene, int sample);
+	std::vector<Vec3Single> Render(const Hittable& scene, int sample, std::vector<Vec3Single>* outNormal = nullptr);
 
 	float m_defocusAngle = 3;
 	float m_focusDistance = 1;
@@ -37,8 +38,9 @@ public:
 	Vec3Single m_direction{ Vec3Single(0.f,0.f,-1.f)};
 	Vec3Single m_up{ Vec3Single(0.f,1.f,0.f) };
 	float m_verticalFOV{ 90 };
-	Color ShootRay(const RayGroup& ray, xs::batch<int> maxBounces, const Hittable& scene) const;
+	Color ShootRay(const RayGroup& ray, xs::batch<int> maxBounces, const Hittable& scene, Color* primaryNormalOut = nullptr) const;
 	RayGroup GetRay(xs::batch<float> pixelX, xs::batch<float> pixelY) const;
+	void GetPrimaryRay(float pixelX, float pixelY, Vec3Single* origin, Vec3Single* direction) const;
 	std::vector<Material*> materials;
 private:
 
