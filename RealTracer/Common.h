@@ -30,7 +30,8 @@ enum E_MATERIALS
 	red,
 	grass,
 	glass,
-	metal
+	metal,
+	mirror
 };
 
 

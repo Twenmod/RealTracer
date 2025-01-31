@@ -124,10 +124,15 @@ out vec4 FragColor;
 in vec2 v_texCoord;
 
 uniform sampler2D image;
+uniform sampler2D normals;
 uniform bool denoise;
 
 uniform vec2 texResolution;
 vec2 offset = 1.0 / texResolution;
+
+float normalDifference(vec3 normal1, vec3 normal2) {
+    return length(normal1 - normal2);  // Euclidean distance between normals
+}
 
 void main() {
 if (denoise) {
@@ -149,16 +154,35 @@ if (denoise) {
         1, 2, 1
     );
 
-        vec3 sampleTex[9];
+    vec3 centerNormal = texture(normals, v_texCoord).xyz;
+
+    vec3 sampleTex[9];
+    vec3 sampleNormals[9];
+    float weights[9];
     for(int i = 0; i < 9; i++)
     {
         sampleTex[i] = vec3(texture(image, v_texCoord + offsets[i]));
+        sampleNormals[i] = texture(normals, v_texCoord + offsets[i]).xyz;
+
+        float normalDiff = normalDifference(centerNormal, sampleNormals[i]);
+            
+        //edgeweight to avoid blurring edges
+		const float sharpness = 10.0;
+        float edgeWeight = exp(-normalDiff * sharpness);  //larger value sharpens more
+        weights[i] = kernel[i] * edgeWeight;
+
+    }
+
+    float totalWeight = 0.0;
+    for(int i = 0; i < 9; i++) {
+        totalWeight += weights[i];
     }
     vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++)
-        col += sampleTex[i] * (kernel[i]);
+    for(int i = 0; i < 9; i++) {
+        col += sampleTex[i] * weights[i];
+    }
     
-    FragColor = vec4(col*(1.0/16.0), 1.0);
+    FragColor = vec4(col/totalWeight, 1.0);
 }else {
 	FragColor = texture(image, v_texCoord);
 }
@@ -263,9 +287,9 @@ if (denoise) {
 	//Scene
 	Scene scene;
 	scene.Add(*new Sphere(diffuse, 0.f, 0.f, 1.f, 0.5f));
-	scene.Add(*new Sphere(red, 2.f, 0.f, -1.f, 0.5f));
-	scene.Add(*new Sphere(metal, 4.f, 0.3f, 0.f, 0.8f));
-	scene.Add(*new Sphere(glass, 1.f, 0.f, 0.f, 0.5f));
+	scene.Add(*new Sphere(red, 1.f, 0.f, -1.f, 0.5f));
+	scene.Add(*new Sphere(metal, 3.f, 0.3f, 0.f, 0.8f));
+	scene.Add(*new Sphere(mirror, 0.f, 0.f, 0.f, 0.5f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
@@ -277,6 +301,7 @@ if (denoise) {
 	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.2f), xs::batch<float>(0.8f), xs::batch<float>(0.2f))));
 	mainCam.materials.push_back(new DielectricMat(1.1f));
 	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f)), 0.3f));
+	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.9f)), 0.0f));
 	mainCam.m_verticalFOV = 20;
 
 
@@ -291,15 +316,15 @@ if (denoise) {
 
 	bool accumulatorOn = true;
 	bool animate = true;
-	bool denoise = false;
+	bool denoise = true;
 	bool showNormals = false;
 	bool showChange = false;
 
 	int samples = SAMPLES_PER_PIXEL;
 
-	float overrideTreshold = 0xff * 0.1f;
-	float smoothingFactor = 0.05f;
-	float updateTimer = 0.1f;
+	float overrideTreshold = 0xff * 0.02f;
+	float smoothingFactor = 0.12f;
+	float updateTimer = 0.07f;
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -452,7 +477,13 @@ if (denoise) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameTextureData.data());
 		glBindTexture(GL_TEXTURE_2D, frameTexture);
 
+
+		glActiveTexture(GL_TEXTURE1);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameNormalData.data());
+		glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
+
 		glUniform1i(glGetUniformLocation(screenShader, "image"), 0);
+		glUniform1i(glGetUniformLocation(screenShader, "normals"), 1);
 		glUniform2f(glGetUniformLocation(screenShader, "texResolution"), IMAGE_WIDTH, IMAGE_HEIGHT);
 		glUniform1i(glGetUniformLocation(screenShader, "denoise"), denoise);
 		glBindVertexArray(screenVAO);

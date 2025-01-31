@@ -100,7 +100,7 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 	xs::batch_bool<int> noBounces = _maxBounces <= 0;
 	if (xs::all(noBounces))
 	{
-		return Color(xs::batch<float>(0.f));
+		return Color(xs::batch<float>(1.f));
 	}
 	HitInfoGroup hit;
 	xs::batch_bool<float> intersections = _scene.Intersect(_ray, IntervalGroup(MIN_INTERSECTION_DEPTH, INFINITY), hit);
