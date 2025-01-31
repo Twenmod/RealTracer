@@ -38,7 +38,7 @@ __________              ._____________
 	uint cores = 0;
 	uint logical = 0;
 	JobManager::GetProcessorCount(cores, logical);
-	JobManager::CreateJobManager(logical*2);
+	JobManager::CreateJobManager(logical * 2);
 	std::clog << "\x1B[36mSystem: \n"
 		<< "\x1B[36m  Cores: \x1B[96m" << cores << '\n'
 		<< "\x1B[36m   Logical: \x1B[96m" << logical << '\n'
@@ -278,8 +278,7 @@ if (denoise) {
 	mainCam.materials.push_back(new DielectricMat(1.1f));
 	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f)), 0.3f));
 	mainCam.m_verticalFOV = 20;
-	mainCam.m_position = Vec3Single(13, 2, 3);
-	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
+
 
 	mainCam.m_defocusAngle = 0.0f;
 	mainCam.m_focusDistance = 10.0f;
@@ -288,6 +287,7 @@ if (denoise) {
 	double lastTime = glfwGetTime();
 	std::vector<unsigned char> frameTextureData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 	std::vector<unsigned char> frameNormalData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
+	std::vector<float> frameUpdatesData(IMAGE_WIDTH * IMAGE_HEIGHT);
 
 	bool accumulatorOn = true;
 	bool animate = true;
@@ -299,6 +299,7 @@ if (denoise) {
 
 	float overrideTreshold = 0xff * 0.1f;
 	float smoothingFactor = 0.05f;
+	float updateTimer = 0.1f;
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -340,12 +341,12 @@ if (denoise) {
 			if (accumulatorOn)
 			{
 				float baseTreshold = overrideTreshold / 0xff;
-				if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0, 1.5f, "%.2f"))
+				if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0.0001, 1.0f, "%.4f"))
 				{
 					overrideTreshold = baseTreshold * 0xff;
 				}
 				float invSmooth = 1.f - smoothingFactor;
-				if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 0.999f, "%.4f"))
+				if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 0.9999f, "%.4f"))
 				{
 					smoothingFactor = 1.f - invSmooth;
 				}
@@ -369,13 +370,18 @@ if (denoise) {
 		{
 			dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time) * 0.5 + 0.5;
 			dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time * 0.6) * 2;
+
+			mainCam.m_position = Vec3Single(sin(time * 0.5) * 10, 2, cos(time * 0.5) * 10);
+			mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
+
 		}
 
-		std::vector<Vec3Single> frameNormal(IMAGE_WIDTH*IMAGE_HEIGHT);
+		std::vector<Vec3Single> frameNormal(IMAGE_WIDTH * IMAGE_HEIGHT);
 		std::vector<Vec3Single> frame = mainCam.Render(scene, samples, &frameNormal);
 
 		for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 		{
+			frameUpdatesData[i] -= deltaTime;
 			Vec3Single frameColor = frame[i];
 			if (showNormals) frameColor = frameNormal[i];
 			Vec3Single frameNormalColor = frameNormal[i];
@@ -398,8 +404,12 @@ if (denoise) {
 					(nG - oldNormalG) * (nG - oldNormalG) +
 					(nB - oldNormalB) * (nB - oldNormalB)
 				);
-				if (normalDistance > overrideTreshold)
-				{ // override
+				if (normalDistance > overrideTreshold || (nR == 127.5f && nG == 127.5f && nB == 127.5f))
+				{
+					frameUpdatesData[i] = updateTimer;
+				}
+				if (frameUpdatesData[i] > 0) {
+					// override
 					if (showChange)
 					{
 						frameTextureData[i * 3 + 0] = 0xff;  // r
