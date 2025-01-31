@@ -4,8 +4,8 @@
 #include <iostream>
 #include "Random.h"
 
-#undef min;
-#undef max;
+#undef min
+#undef max
 
 class Vec3
 {

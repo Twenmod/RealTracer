@@ -14,11 +14,11 @@
 #include "App.h"
 #include "DemoApp.h"
 
-void error_callback(int error, const char* description)
+void error_callback(int, const char* description)
 {
 	Logger::LogWarning(description, WARNING_SEVERITY::HIGH);
 }
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void key_callback(GLFWwindow* window, int key, int, int action, int)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -26,94 +26,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 GLFWwindow* window;
 
-void Init()
-{
-	Logger::CreateLogger();
-	uint cores = 0;
-	uint logical = 0;
-	JobManager::GetProcessorCount(cores, logical);
-	JobManager::CreateJobManager(logical * 2);
-
-	//Set up a window
-	if (!glfwInit())
-	{
-		Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
-		abort();
-	}
-	glfwSetErrorCallback(error_callback);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "RealTracer", NULL, NULL);
-	if (!window)
-	{
-		Logger::LogWarning("GLFW Window or OpenGL context creation failed", WARNING_SEVERITY::FATAL);
-		abort();
-	}
-	glfwSetKeyCallback(window, key_callback);
-	glfwMakeContextCurrent(window);
-	if (!gladLoadGL())
-	{
-		Logger::LogWarning("OpenGL context creation failed", WARNING_SEVERITY::FATAL);
-		abort();
-	}
-	glfwSwapInterval(0);
-
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-	const char* glsl_version = "#version 330";
-	ImGui::CreateContext();
-	ImGui::StyleColorsClassic();
-	//ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
-	ImGuiIO io = ImGui::GetIO();
-	io.DisplaySize = ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT);
-	io.Fonts->AddFontDefault();  // Ensure the default font is loaded
-	io.Fonts->Build();  // Build the font atlas
-	unsigned char* tex_pixels;
-	int tex_width, tex_height;
-	io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
-
-	// Upload texture to OpenGL (for the font atlas)
-	GLuint fontTexture;
-	glGenTextures(1, &fontTexture);
-	glBindTexture(GL_TEXTURE_2D, fontTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_pixels);
-
-	io.Fonts->SetTexID((ImTextureID)(intptr_t)fontTexture);
 
 
-	std::clog << "\x1B[36mSystem Info: \n"
-		<< "\x1B[36m  Cores: \x1B[96m" << cores << '\n'
-		<< "\x1B[36m   Logical: \x1B[96m" << logical << '\n'
-		<< "\x1B[36m  Threads: \x1B[96m" << JobManager::GetJobManager()->MaxConcurrent() << '\n'
-		<< "\x1B[36m  SIMD size\x1B[96m: " << SIMD_SIZE << '\n'
-		<< "\x1B[36mSettings: \n"
-		<< "\x1B[36m  Image Size\x1B[96m: " << IMAGE_WIDTH << "x" << IMAGE_HEIGHT << '\n'
-		<< "\x1B[36m  Samples: \x1B[96m" << SAMPLES_PER_PIXEL * SIMD_SIZE << '\n';
 
-}
+//Global variables are good for your health
+std::vector<unsigned char> frameTextureData(IMAGE_WIDTH* IMAGE_HEIGHT * 3);
+std::vector<unsigned char> frameNormalData(IMAGE_WIDTH* IMAGE_HEIGHT * 3);
+std::vector<float> frameUpdatesData(IMAGE_WIDTH* IMAGE_HEIGHT);
+EngineSettings settings;
 
-int main()
-{
-
-	std::clog << "\x1B[35m" << R"(
-Starting:
-__________              ._____________                                 
-\______   \ ____ _____  |  \__    ___/___________    ____  ___________ 
- |       _// __ \\__  \ |  | |    |  \_  __ \__  \ _/ ___\/ __ \_  __ \
- |    |   \  ___/ / __ \|  |_|    |   |  | \// __ \\  \__\  ___/|  | \/
- |____|_  /\___  >____  /____/____|   |__|  (____  /\___  >___  >__|   
-        \/     \/     \/                         \/     \/    \/       
-)";
-
-
-	EngineSettings settings;
-	Init();
-
-	const char* vertexShader = R"(
+const char* vertexShader = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoords;
@@ -126,7 +48,7 @@ void main()
 	v_texCoord = aTexCoords;
 }
 )";
-	const char* fragmentShader = R"(
+const char* fragmentShader = R"(
 #version 330 core
 
 out vec4 FragColor;
@@ -198,11 +120,221 @@ if (denoise) {
 }
 }
 )";
+unsigned int vertex, fragment;
+
+float screenPlaneVert[] = {
+	// positions          // texture coords
+	 1.f, -1.f, 0.0f,      1.0f, 1.0f,   // bottom right
+	 1.f,  1.f, 0.0f,      1.0f, 0.0f,   // top right
+	-1.f, -1.f, 0.0f,      0.0f, 1.0f,   // bottom 
+	-1.f,  1.f, 0.0f,      0.0f, 0.0f,   // top left 
+	-1.f, -1.f, 0.0f,      0.0f, 1.0f,   // bottom left
+	 1.f,  1.f, 0.0f,      1.0f, 0.0f    // top right
+};
+
+unsigned int screenIndices[] = {
+0, 1, 2,   // First triangle
+1, 3, 2    // Second triangle
+};
+
+
+unsigned int screenVAO, screenVBO;
+uint frameTexture;
+uint frameNormalTexture;
+unsigned int screenShader;
+
+void Init()
+{
+	Logger::CreateLogger();
+	uint cores = 0;
+	uint logical = 0;
+	JobManager::GetProcessorCount(cores, logical);
+	JobManager::CreateJobManager(logical * 2);
+
+	//Set up a window
+	if (!glfwInit())
+	{
+		Logger::LogWarning("GLFW Failed to Init", WARNING_SEVERITY::FATAL);
+		abort();
+	}
+	glfwSetErrorCallback(error_callback);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "RealTracer", NULL, NULL);
+	if (!window)
+	{
+		Logger::LogWarning("GLFW Window or OpenGL context creation failed", WARNING_SEVERITY::FATAL);
+		abort();
+	}
+	glfwSetKeyCallback(window, key_callback);
+	glfwMakeContextCurrent(window);
+	if (!gladLoadGL())
+	{
+		Logger::LogWarning("OpenGL context creation failed", WARNING_SEVERITY::FATAL);
+		abort();
+	}
+	glfwSwapInterval(0);
+
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	const char* glsl_version = "#version 330";
+	ImGui::CreateContext();
+	ImGui::StyleColorsClassic();
+	//ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+	ImGuiIO io = ImGui::GetIO();
+	io.DisplaySize = ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT);
+	io.Fonts->AddFontDefault();  // Ensure the default font is loaded
+	io.Fonts->Build();  // Build the font atlas
+	unsigned char* tex_pixels;
+	int tex_width, tex_height;
+	io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
+
+	// Upload texture to OpenGL (for the font atlas)
+	GLuint fontTexture;
+	glGenTextures(1, &fontTexture);
+	glBindTexture(GL_TEXTURE_2D, fontTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_pixels);
+
+	io.Fonts->SetTexID((ImTextureID)(intptr_t)fontTexture);
+
+
+	std::clog << "\x1B[36mSystem Info: \n"
+		<< "\x1B[36m  Cores: \x1B[96m" << cores << '\n'
+		<< "\x1B[36m   Logical: \x1B[96m" << logical << '\n'
+		<< "\x1B[36m  Threads: \x1B[96m" << JobManager::GetJobManager()->MaxConcurrent() << '\n'
+		<< "\x1B[36m  SIMD Architecture: \x1B[96m"
+#if SSE2
+		<< "SSE2"
+#else
+#if AVX2
+		<< "AVX2"
+#else
+#if AVX512
+		<< "AVX512"
+#else
+		<< "\x1B[31\x1B[24ERROR"
+#endif
+#endif
+#endif
+		<< "\x1B[0m\n"
+		<< "\x1B[36m  SIMD size:\x1B[96m " << SIMD_SIZE << '\n'
+		<< "\x1B[36mSettings: \n"
+		<< "\x1B[36m  Image Size:\x1B[96m " << IMAGE_WIDTH << "x" << IMAGE_HEIGHT << '\n'
+		<< "\x1B[36m  Samples: \x1B[96m" << SAMPLES_PER_PIXEL * SIMD_SIZE << '\n';
+
+}
+
+void Accumulate(float deltaTime, std::vector<Vec3Single>& frame, std::vector<Vec3Single>& frameNormal)
+{
+
+	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
+	{
+		frameUpdatesData[i] -= deltaTime;
+		Vec3Single frameColor = frame[i];
+		if (settings.showNormals) frameColor = frameNormal[i];
+		Vec3Single frameNormalColor = frameNormal[i];
+		float r = frameColor.x() * 0xff;
+		float g = frameColor.y() * 0xff;
+		float b = frameColor.z() * 0xff;
+		float nR = frameNormalColor.x() * 0xff;
+		float nG = frameNormalColor.y() * 0xff;
+		float nB = frameNormalColor.z() * 0xff;
+		if (settings.accumulatorOn)
+		{
+			float oldr = frameTextureData[i * 3 + 0];
+			float oldg = frameTextureData[i * 3 + 1];
+			float oldb = frameTextureData[i * 3 + 2];
+			float oldNormalR = frameNormalData[i * 3 + 0];
+			float oldNormalB = frameNormalData[i * 3 + 2];
+			float oldNormalG = frameNormalData[i * 3 + 1];
+			float normalDistance = std::sqrt(
+				(nR - oldNormalR) * (nR - oldNormalR) +
+				(nG - oldNormalG) * (nG - oldNormalG) +
+				(nB - oldNormalB) * (nB - oldNormalB)
+			);
+			if (normalDistance > settings.overrideTreshold || (nR == 127.5f && nG == 127.5f && nB == 127.5f))
+			{
+				frameUpdatesData[i] = settings.updateTimer;
+			}
+			if (frameUpdatesData[i] > 0)
+			{
+				// override
+				if (settings.showChange)
+				{
+					frameTextureData[i * 3 + 0] = 0xff;  // r
+					frameTextureData[i * 3 + 1] = 0;  // G
+					frameTextureData[i * 3 + 2] = 0;  // b
+				}
+				else
+				{
+					frameTextureData[i * 3 + 0] = static_cast<unsigned char>(r);  // r
+					frameTextureData[i * 3 + 1] = static_cast<unsigned char>(g);  // G
+					frameTextureData[i * 3 + 2] = static_cast<unsigned char>(b);  // b
+				}
+			}
+			else
+			{ // accumalate
+				frameTextureData[i * 3 + 0] = static_cast<unsigned char>(oldr * (1.f - settings.smoothingFactor) + r * settings.smoothingFactor);  // G			
+				frameTextureData[i * 3 + 1] = static_cast<unsigned char>(oldg * (1.f - settings.smoothingFactor) + g * settings.smoothingFactor);  // G
+				frameTextureData[i * 3 + 2] = static_cast<unsigned char>(oldb * (1.f - settings.smoothingFactor) + b * settings.smoothingFactor);  // b
+			}
+		}
+		else
+		{
+			frameTextureData[i * 3 + 0] = static_cast<unsigned char>(r);  // r
+			frameTextureData[i * 3 + 1] = static_cast<unsigned char>(g);  // G
+			frameTextureData[i * 3 + 2] = static_cast<unsigned char>(b);  // b
+		}
+
+		frameNormalData[i * 3 + 0] = static_cast<unsigned char>(nR);  // r
+		frameNormalData[i * 3 + 1] = static_cast<unsigned char>(nG);  // G
+		frameNormalData[i * 3 + 2] = static_cast<unsigned char>(nB);  // b
+
+	}
+}
+
+void RenderScreen()
+{
+	glUseProgram(screenShader);
+	glActiveTexture(GL_TEXTURE0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameTextureData.data());
+	glBindTexture(GL_TEXTURE_2D, frameTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameNormalData.data());
+	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
+	glUniform1i(glGetUniformLocation(screenShader, "image"), 0);
+	glUniform1i(glGetUniformLocation(screenShader, "normals"), 1);
+	glUniform2f(glGetUniformLocation(screenShader, "texResolution"), IMAGE_WIDTH, IMAGE_HEIGHT);
+	glUniform1i(glGetUniformLocation(screenShader, "denoise"), settings.denoise);
+	glBindVertexArray(screenVAO);
+	glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
+}
+
+int main()
+{
+
+	std::clog << "\x1B[35m" << R"(
+Starting:
+__________              ._____________                                 
+\______   \ ____ _____  |  \__    ___/___________    ____  ___________ 
+ |       _// __ \\__  \ |  | |    |  \_  __ \__  \ _/ ___\/ __ \_  __ \
+ |    |   \  ___/ / __ \|  |_|    |   |  | \// __ \\  \__\  ___/|  | \/
+ |____|_  /\___  >____  /____/____|   |__|  (____  /\___  >___  >__|   
+        \/     \/     \/                         \/     \/    \/       
+)";
+
+
+	Init();
+
+
 
 	GLint success;
 	GLchar infoLog[1024];
 
-	unsigned int vertex, fragment;
 	// vertex shader
 	vertex = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex, 1, &vertexShader, NULL);
@@ -225,7 +357,7 @@ if (denoise) {
 		Logger::LogWarning("SHADER COMPILATION ERROR ", WARNING_SEVERITY::HIGH);
 		Logger::LogWarning(infoLog, WARNING_SEVERITY::HIGH);
 	}	// shader Program
-	unsigned int screenShader = glCreateProgram();
+	screenShader = glCreateProgram();
 	glAttachShader(screenShader, vertex);
 	glAttachShader(screenShader, fragment);
 	glLinkProgram(screenShader);
@@ -239,23 +371,6 @@ if (denoise) {
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
 
-	float screenPlaneVert[] = {
-		// positions          // texture coords
-		 1.f, -1.f, 0.0f,      1.0f, 1.0f,   // bottom right
-		 1.f,  1.f, 0.0f,      1.0f, 0.0f,   // top right
-		-1.f, -1.f, 0.0f,      0.0f, 1.0f,   // bottom 
-		-1.f,  1.f, 0.0f,      0.0f, 0.0f,   // top left 
-		-1.f, -1.f, 0.0f,      0.0f, 1.0f,   // bottom left
-		 1.f,  1.f, 0.0f,      1.0f, 0.0f    // top right
-	};
-
-	unsigned int screenIndices[] = {
-	0, 1, 2,   // First triangle
-	1, 3, 2    // Second triangle
-	};
-
-
-	unsigned int screenVAO, screenVBO;
 	glGenVertexArrays(1, &screenVAO);
 	glGenBuffers(1, &screenVBO);
 
@@ -271,7 +386,6 @@ if (denoise) {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-	uint frameTexture;
 	glGenTextures(1, &frameTexture);
 	glBindTexture(GL_TEXTURE_2D, frameTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -280,7 +394,6 @@ if (denoise) {
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, frameTexture);
-	uint frameNormalTexture;
 	glGenTextures(1, &frameNormalTexture);
 	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -289,23 +402,20 @@ if (denoise) {
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
-	
+
 	App* theApp = new DemoApp(*window, settings);
 	theApp->Init();
 
 
 
 	double lastTime = glfwGetTime();
-	std::vector<unsigned char> frameTextureData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
-	std::vector<unsigned char> frameNormalData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
-	std::vector<float> frameUpdatesData(IMAGE_WIDTH * IMAGE_HEIGHT);
 
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 		double time = glfwGetTime();
-		float deltaTime = (time - lastTime);
+		float deltaTime = static_cast<float>((time - lastTime));
 		lastTime = time;
 
 		ImGui_ImplGlfw_NewFrame();
@@ -319,89 +429,9 @@ if (denoise) {
 
 		theApp->Render(frame, frameNormal);
 
-		for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
-		{
-			frameUpdatesData[i] -= deltaTime;
-			Vec3Single frameColor = frame[i];
-			if (settings.showNormals) frameColor = frameNormal[i];
-			Vec3Single frameNormalColor = frameNormal[i];
-			float r = frameColor.x() * 0xff;
-			float g = frameColor.y() * 0xff;
-			float b = frameColor.z() * 0xff;
-			float nR = frameNormalColor.x() * 0xff;
-			float nG = frameNormalColor.y() * 0xff;
-			float nB = frameNormalColor.z() * 0xff;
-			if (settings.accumulatorOn)
-			{
-				float oldr = frameTextureData[i * 3 + 0];
-				float oldg = frameTextureData[i * 3 + 1];
-				float oldb = frameTextureData[i * 3 + 2];
-				float oldNormalR = frameNormalData[i * 3 + 0];
-				float oldNormalB = frameNormalData[i * 3 + 2];
-				float oldNormalG = frameNormalData[i * 3 + 1];
-				float normalDistance = std::sqrt(
-					(nR - oldNormalR) * (nR - oldNormalR) +
-					(nG - oldNormalG) * (nG - oldNormalG) +
-					(nB - oldNormalB) * (nB - oldNormalB)
-				);
-				if (normalDistance > settings.overrideTreshold || (nR == 127.5f && nG == 127.5f && nB == 127.5f))
-				{
-					frameUpdatesData[i] = settings.updateTimer;
-				}
-				if (frameUpdatesData[i] > 0) {
-					// override
-					if (settings.showChange)
-					{
-						frameTextureData[i * 3 + 0] = 0xff;  // r
-						frameTextureData[i * 3 + 1] = 0;  // G
-						frameTextureData[i * 3 + 2] = 0;  // b
-					}
-					else
-					{
-						frameTextureData[i * 3 + 0] = r;  // r
-						frameTextureData[i * 3 + 1] = g;  // G
-						frameTextureData[i * 3 + 2] = b;  // b
-					}
-				}
-				else
-				{ // accumalate
-					frameTextureData[i * 3 + 0] = oldr * (1.f - settings.smoothingFactor) + r * settings.smoothingFactor;  // G			
-					frameTextureData[i * 3 + 1] = oldg * (1.f - settings.smoothingFactor) + g * settings.smoothingFactor;  // G
-					frameTextureData[i * 3 + 2] = oldb * (1.f - settings.smoothingFactor) + b * settings.smoothingFactor;  // b
-				}
-			}
-			else
-			{
-				frameTextureData[i * 3 + 0] = r;  // r
-				frameTextureData[i * 3 + 1] = g;  // G
-				frameTextureData[i * 3 + 2] = b;  // b
-			}
+		Accumulate(deltaTime, frame, frameNormal);
 
-			frameNormalData[i * 3 + 0] = nR;  // r
-			frameNormalData[i * 3 + 1] = nG;  // G
-			frameNormalData[i * 3 + 2] = nB;  // b
-
-		}
-
-		glUseProgram(screenShader);
-
-		//Draw to texture
-
-		glActiveTexture(GL_TEXTURE0);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameTextureData.data());
-		glBindTexture(GL_TEXTURE_2D, frameTexture);
-
-
-		glActiveTexture(GL_TEXTURE1);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameNormalData.data());
-		glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
-
-		glUniform1i(glGetUniformLocation(screenShader, "image"), 0);
-		glUniform1i(glGetUniformLocation(screenShader, "normals"), 1);
-		glUniform2f(glGetUniformLocation(screenShader, "texResolution"), IMAGE_WIDTH, IMAGE_HEIGHT);
-		glUniform1i(glGetUniformLocation(screenShader, "denoise"), settings.denoise);
-		glBindVertexArray(screenVAO);
-		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
+		RenderScreen();
 
 		theApp->LateRender();
 

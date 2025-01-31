@@ -9,6 +9,10 @@
  * The full license is in the file LICENSE, distributed with this software. *
  ****************************************************************************/
 
+//L xsimd devs didnt fix their warnings on level 4
+#pragma warning(push)
+#pragma warning(disable : 4127 4244)
+
 #ifndef XSIMD_SSE2_HPP
 #define XSIMD_SSE2_HPP
 
@@ -1786,3 +1790,4 @@ namespace xsimd
 }
 
 #endif
+#pragma warning(pop)

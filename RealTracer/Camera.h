@@ -14,14 +14,14 @@ class RayJob : public Job
 {
 public:
 	void Main() override;
-	Camera* camera;
-	int pixelPos;
-	uint maxBounces;
-	std::vector<Vec3Single>* pixels;
-	std::vector<Vec3Single>* primaryNormals;
-	const Hittable* scene;
-	int pixelAmount;
-	int samples;
+	Camera* camera{nullptr};
+	int pixelPos{0};
+	uint maxBounces{0};
+	std::vector<Vec3Single>* pixels{nullptr};
+	std::vector<Vec3Single>* primaryNormals{nullptr};
+	const Hittable* scene{nullptr};
+	int pixelAmount{0};
+	int samples{0};
 };
 
 

@@ -42,10 +42,10 @@ void DemoApp::Tick(float _deltaTime)
 
 	if (m_settings.animate) timer += _deltaTime;
 
-	dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5 + 0.5;
-	dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6) * 2;
+	dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
+	dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
-	mainCam.m_position = Vec3Single(sin(timer * 0.5) * 10, 2, cos(timer * 0.5) * 10);
+	mainCam.m_position = Vec3Single(sin(timer * 0.5f) * 10.f, 2.f, cos(timer * 0.5f) * 10.f);
 	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
 
 }
@@ -60,7 +60,7 @@ void DemoApp::Render(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>
 	ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
 	if (ImGui::TreeNode("Statistic"))
 	{
-		ImGui::PlotHistogram("##1", frameRates.data(), frameRates.size());
+		ImGui::PlotHistogram("##1", frameRates.data(), static_cast<int>(frameRates.size()));
 		float tot = 0;
 		for (float& frame : frameRates)
 		{
@@ -80,7 +80,7 @@ void DemoApp::Render(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>
 		if (m_settings.accumulatorOn)
 		{
 			float baseTreshold = m_settings.overrideTreshold / 0xff;
-			if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0.0001, 1.0f, "%.4f"))
+			if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0.0001f, 1.0f, "%.4f"))
 			{
 				m_settings.overrideTreshold = baseTreshold * 0xff;
 			}
@@ -89,7 +89,7 @@ void DemoApp::Render(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>
 			{
 				m_settings.smoothingFactor = 1.f - invSmooth;
 			}
-			if (ImGui::SliderFloat("  Update margin", &m_settings.updateTimer, 0, 0.4f, "%.3f"));
+			ImGui::SliderFloat("  Update margin", &m_settings.updateTimer, 0, 0.4f, "%.3f");
 		}
 		ImGui::Checkbox("Denoise", &m_settings.denoise);
 		ImGui::TreePop();

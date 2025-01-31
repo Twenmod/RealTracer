@@ -26,7 +26,7 @@ std::vector<Vec3Single> Camera::Render(const Hittable& scene, int samples, std::
 	std::vector<Vec3Single> pixels(IMAGE_WIDTH * IMAGE_HEIGHT);
 
 	int maxThreads = jobManager->MaxConcurrent();
-	int pixelsPerThread = floor((IMAGE_WIDTH * IMAGE_HEIGHT) / maxThreads);
+	int pixelsPerThread = static_cast<int>(floor((IMAGE_WIDTH * IMAGE_HEIGHT) / maxThreads));
 
 	int jobIndex = 0;
 	for (int i = 0; i < maxThreads; i++)
@@ -194,14 +194,14 @@ void RayJob::Main()
 	for (int i = 0; i < pixelAmount; i++)
 	{
 		int pos = pixelPos + i;
-		int yPos = floor(pos / IMAGE_WIDTH);
+		int yPos = static_cast<int>(floor(pos / IMAGE_WIDTH));
 		int xPos = pos - yPos * IMAGE_WIDTH;
 
 		Color pixelColor(0);
 		Color primaryNormal;
 		for (size_t sample = 0; sample < samples; sample++)
 		{
-			RayGroup ray = camera->GetRay(xs::batch<float> (xPos), xs::batch<float> (yPos));
+			RayGroup ray = camera->GetRay(xs::batch<float> (static_cast<float>(xPos)), xs::batch<float> (static_cast<float>(yPos)));
 
 			//Primary ray is const to make normals more consistent
 			Color rayColors;
@@ -219,7 +219,7 @@ void RayJob::Main()
 
 				Vec3Single primaryOrigin;
 				Vec3Single primaryDirection;
-				camera->GetPrimaryRay(xPos, yPos, &primaryOrigin, &primaryDirection);
+				camera->GetPrimaryRay(static_cast<float>(xPos), static_cast<float>(yPos), &primaryOrigin, &primaryDirection);
 
 				ray.origin.x = xs::select(firstRay, xs::batch<float> (primaryOrigin.x()), ray.origin.x);
 				ray.origin.y = xs::select(firstRay, xs::batch<float> (primaryOrigin.y()), ray.origin.y);
@@ -243,11 +243,11 @@ void RayJob::Main()
 		float pixelColorG = 0;
 		float pixelColorB = 0;
 
-		for (size_t i = 0; i < SIMD_SIZE; i++)
+		for (size_t j = 0; j < SIMD_SIZE; j++)
 		{
-			pixelColorR += pixelColor.x.get(i);
-			pixelColorG += pixelColor.y.get(i);
-			pixelColorB += pixelColor.z.get(i);
+			pixelColorR += pixelColor.x.get(j);
+			pixelColorG += pixelColor.y.get(j);
+			pixelColorB += pixelColor.z.get(j);
 		}
 		float sampleScale = (1.f / (static_cast<float>(samples))) / SIMD_SIZE;
 
