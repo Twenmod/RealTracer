@@ -16,8 +16,7 @@ public:
 
 	void SetNormal(const RayGroup& _ray, Vec3 _normal)
 	{
-		xs::batch<float> dots = Dot(_ray.direction, _normal);
-		frontFace = dots < xs::batch<float>(0.f);
+		frontFace = Dot(_ray.direction, _normal) < 0.f;
 		normal.x = xs::select(frontFace, _normal.x, -_normal.x);
 		normal.y = xs::select(frontFace, _normal.y, -_normal.y);
 		normal.z = xs::select(frontFace, _normal.z, -_normal.z);

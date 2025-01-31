@@ -13,3 +13,16 @@
 //	float m_glossiness;
 //};
 //
+class MetalMat :
+	public Material
+{
+public:
+	MetalMat(const Color& albedo, const float glossiness);
+
+	xs::batch_bool<float>Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, Color& attentuation, RayGroup& rayOut) const override;
+
+private:
+	Color albedo;
+	float glossiness;
+};
+

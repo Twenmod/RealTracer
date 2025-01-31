@@ -74,30 +74,29 @@ __________              ._____________
 
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	//const char* glsl_version = "#version 330";
-	//ImGui::CreateContext();
-	//ImGui::StyleColorsClassic();
-	////ImGui::StyleColorsDark();
-	//ImGui_ImplGlfw_InitForOpenGL(window, true);
-	//ImGui_ImplOpenGL3_Init(glsl_version);
-	//ImGuiIO io = ImGui::GetIO();
-	//io.DisplaySize = ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT);
-	//io.Fonts->AddFontDefault();  // Ensure the default font is loaded
-	//io.Fonts->Build();  // Build the font atlas
+	const char* glsl_version = "#version 330";
+	ImGui::CreateContext();
+	ImGui::StyleColorsClassic();
+	//ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+	ImGuiIO io = ImGui::GetIO();
+	io.Fonts->AddFontDefault();  // Ensure the default font is loaded
+	io.Fonts->Build();  // Build the font atlas
 
-	//unsigned char* tex_pixels;
-	//int tex_width, tex_height;
-	//io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
+	unsigned char* tex_pixels;
+	int tex_width, tex_height;
+	io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_width, &tex_height);
 
-	//// Upload texture to OpenGL (for the font atlas)
-	//GLuint fontTexture;
-	//glGenTextures(1, &fontTexture);
-	//glBindTexture(GL_TEXTURE_2D, fontTexture);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_pixels);
+	// Upload texture to OpenGL (for the font atlas)
+	GLuint fontTexture;
+	glGenTextures(1, &fontTexture);
+	glBindTexture(GL_TEXTURE_2D, fontTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_pixels);
 
-	//io.Fonts->SetTexID((ImTextureID)(intptr_t)fontTexture);
+	io.Fonts->SetTexID((ImTextureID)(intptr_t)fontTexture);
 
 
 	const char* vertexShader = R"(
@@ -211,17 +210,19 @@ void main() {
 	Scene scene;
 	scene.Add(*new Sphere(diffuse, 0.f, 0.f, 1.f, 0.5f));
 	scene.Add(*new Sphere(red, 2.f, 0.f, -1.f, 0.5f));
-	//scene.Add(*new Sphere(glass, 4.f, 0.3f, 0.f, 0.8f));
+	scene.Add(*new Sphere(metal, 4.f, 0.3f, 0.f, 0.8f));
+	scene.Add(*new Sphere(glass, 1.f, 0.f, 0.f, 0.5f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
 
 	//Camera
 	Camera mainCam;
-	mainCam.materials.push_back(new LambertianMat(Color(0.5f, 0.5f, 0.5f)));
-	mainCam.materials.push_back(new LambertianMat(Color(0.9f, 0.3f, 0.3f)));
-	mainCam.materials.push_back(new LambertianMat(Color(0.2f, 0.8f, 0.2f)));
+	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.5f), xs::batch<float>(0.5f), xs::batch<float>(0.5f))));
+	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.9f), xs::batch<float>(0.3f), xs::batch<float>(0.3f))));
+	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.2f), xs::batch<float>(0.8f), xs::batch<float>(0.2f))));
 	mainCam.materials.push_back(new DielectricMat(1.1f));
+	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f)), 0.3f));
 	mainCam.m_verticalFOV = 20;
 	mainCam.m_position = Vec3Single(13, 2, 3);
 	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
@@ -229,8 +230,22 @@ void main() {
 	mainCam.m_defocusAngle = 0.0f;
 	mainCam.m_focusDistance = 10.0f;
 
-	std::vector<float> frameRates(30,0);
+	std::vector<float> frameRates(30, 0.f);
 	double lastTime = glfwGetTime();
+	std::vector<unsigned char> frameTextureData(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
+
+	//first render
+	std::vector<Vec3Single> frame = mainCam.Render(scene);
+
+	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
+	{
+		Vec3Single frameColor = frame[i];
+		frameTextureData[i * 3 + 0] = frameColor.x() * 0xff;  // R
+		frameTextureData[i * 3 + 1] = frameColor.y() * 0xff;  // G
+		frameTextureData[i * 3 + 2] = frameColor.z() * 0xff;  // B	
+	}
+
+
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -240,42 +255,57 @@ void main() {
 		frameRates.push_back(1.f / deltaTime);
 		lastTime = time;
 
-		//ImGui::NewFrame();
-		//ImGui_ImplGlfw_NewFrame();
-		//ImGui_ImplOpenGL3_NewFrame();
+		ImGui::NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplOpenGL3_NewFrame();
 
-		//static bool open = true;
-		//ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_Appearing);
-		//ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
-		//ImGui::Begin("Debug", &open);
-		//ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
-		//if (ImGui::TreeNode("Statistic"))
-		//{
-		//	ImGui::PlotHistogram("##1", frameRates.data(), frameRates.size());
-		//	float tot = 0;
-		//	for (float& frame : frameRates)
-		//	{
-		//		tot += frame;
-		//	}
-		//	tot /= frameRates.size();
-		//	ImGui::Text("FPS: %.f (%.2fms)",tot,deltaTime*1000.f);
+		static bool open = true;
+		ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_Appearing);
+		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
+		ImGui::Begin("Debug", &open);
+		ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
+		if (ImGui::TreeNode("Statistic"))
+		{
+			ImGui::PlotHistogram("##1", frameRates.data(), frameRates.size());
+			float tot = 0;
+			for (float& frame : frameRates)
+			{
+				tot += frame;
+			}
+			tot /= frameRates.size();
+			ImGui::Text("FPS: %.f (%.2fms)", tot, deltaTime * 1000.f);
 
-		//	ImGui::TreePop();
-		//}
-		//ImGui::End();
+			ImGui::TreePop();
+		}
+		ImGui::End();
 
-		dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time)*0.5+0.5;
-		//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time*0.6)*2;
+		dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(time) * 0.5 + 0.5;
+		dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(time * 0.6) * 2;
 
 		std::vector<Vec3Single> frame = mainCam.Render(scene);
-
-		std::vector<unsigned char> frameTextureData(IMAGE_WIDTH*IMAGE_HEIGHT * 3);
+		const float overrideTreshold = 0xff * 0.08f;
+		const float smoothingFactor = 0.03f;
 		for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 		{
 			Vec3Single frameColor = frame[i];
-			frameTextureData[i * 3 + 0] = frameColor.x()* 0xff;  // R
-			frameTextureData[i * 3 + 1] = frameColor.y()* 0xff;  // G
-			frameTextureData[i * 3 + 2] = frameColor.z()* 0xff;  // B	
+			float r = frameColor.x() * 0xff;
+			float oldr = frameTextureData[i * 3 + 0];
+			if (abs(r - oldr) > overrideTreshold)
+				frameTextureData[i * 3 + 0] = r;  // r
+			else
+				frameTextureData[i * 3 + 0] = oldr * (1.f - smoothingFactor) + r * smoothingFactor;  // G			
+			float g = frameColor.y() * 0xff;
+			float oldg = frameTextureData[i * 3 + 1];
+			if(abs(g-oldg) > overrideTreshold)
+				frameTextureData[i * 3 + 1] = g;  // G
+			else
+				frameTextureData[i * 3 + 1] = oldg * (1.f - smoothingFactor) + g * smoothingFactor;  // G
+			float b = frameColor.z() * 0xff;
+			float oldb = frameTextureData[i * 3 + 2];
+			if (abs(b - oldb) > overrideTreshold)
+				frameTextureData[i * 3 + 2] = b;  // b
+			else
+				frameTextureData[i * 3 + 2] = oldb * (1.f - smoothingFactor) + b * smoothingFactor;  // b
 		}
 
 
@@ -291,10 +321,10 @@ void main() {
 
 		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
 
-		//ImGui::EndFrame();
+		ImGui::EndFrame();
 
-		//ImGui::Render();
-		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
 		glfwSwapBuffers(window);

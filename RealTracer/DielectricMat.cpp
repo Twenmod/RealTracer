@@ -40,7 +40,7 @@ DielectricMat::DielectricMat(const float _IOR)
 xs::batch_bool<float> DielectricMat::Scatter(const RayGroup& _rayIn, const HitInfoGroup& _hitInfo, Color& _attentuation, RayGroup& _rayOut) const
 {
 	_attentuation = Color(xs::batch<float>(1.f));
-	xs::batch<float> relativeIOR = xs::select(!_hitInfo.frontFace, xs::batch<float>(1.f / IOR), xs::batch<float>(IOR));
+	xs::batch<float> relativeIOR = xs::select(_hitInfo.frontFace, xs::batch<float>(1.f / IOR), xs::batch<float>(IOR));
 
 	Vec3 rayDir = Normalize(_rayIn.direction);
 	xs::batch<float> cosTheta = xs::min(Dot(-rayDir, _hitInfo.normal), xs::batch<float>(1.f));
