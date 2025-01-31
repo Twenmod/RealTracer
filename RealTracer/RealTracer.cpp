@@ -350,6 +350,7 @@ if (denoise) {
 				{
 					smoothingFactor = 1.f - invSmooth;
 				}
+				if (ImGui::SliderFloat("  Update margin", &updateTimer, 0, 0.4f, "%.3f"));
 			}
 			ImGui::Checkbox("Denoise", &denoise);
 			ImGui::TreePop();
