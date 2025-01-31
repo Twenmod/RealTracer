@@ -115,15 +115,51 @@ void main()
 }
 )";
 	const char* fragmentShader = R"(
-#version 330 core                       
+#version 330 core
+
 out vec4 FragColor;
 
 in vec2 v_texCoord;
 
 uniform sampler2D image;
+uniform bool denoise;
+
+uniform vec2 texResolution;
+vec2 offset = 1.0 / texResolution;
 
 void main() {
-    FragColor = texture(image,v_texCoord);
+if (denoise) {
+	vec2 offsets[9] = vec2[](
+		vec2(-offset.x,  offset.y), // top-left
+		vec2( 0.0,       offset.y), // top-center
+		vec2( offset.x,  offset.y), // top-right
+		vec2(-offset.x,  0.0),   // center-left
+		vec2( 0.0,       0.0),   // center-center
+		vec2( offset.x,  0.0),   // center-right
+		vec2(-offset.x, -offset.y), // bottom-left
+		vec2( 0.0,      -offset.y), // bottom-center
+		vec2( offset.x, -offset.y)  // bottom-right    
+	);
+
+    float kernel[9] = float[](
+        1, 2, 1,
+        2,  4, 2,
+        1, 2, 1
+    );
+
+        vec3 sampleTex[9];
+    for(int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = vec3(texture(image, v_texCoord + offsets[i]));
+    }
+    vec3 col = vec3(0.0);
+    for(int i = 0; i < 9; i++)
+        col += sampleTex[i] * (kernel[i]);
+    
+    FragColor = vec4(col*(1.0/16.0), 1.0);
+}else {
+	FragColor = texture(image, v_texCoord);
+}
 }
 )";
 
@@ -157,7 +193,7 @@ void main() {
 	glAttachShader(screenShader, vertex);
 	glAttachShader(screenShader, fragment);
 	glLinkProgram(screenShader);
-	glGetShaderiv(screenShader, GL_COMPILE_STATUS, &success);
+	glGetShaderiv(screenShader, GL_LINK_STATUS, &success);
 	if (!success)
 	{
 		glGetShaderInfoLog(screenShader, 1024, NULL, infoLog);
@@ -199,10 +235,16 @@ void main() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-	glUseProgram(screenShader);
+	uint frameTexture;
+	glGenTextures(1, &frameTexture);
+	glBindTexture(GL_TEXTURE_2D, frameTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glGenerateMipmap(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(screenShader, "image"), 0);
-	glBindVertexArray(screenVAO);
+	glBindTexture(GL_TEXTURE_2D, frameTexture);
+
 
 	//Material* glass = new DielectricMat(1.5f);
 	//Material* glassAirBubble = new DielectricMat(1.f/1.5f);
@@ -238,6 +280,8 @@ void main() {
 
 	bool accumulatorOn = true;
 	bool animate = true;
+	bool denoise = true;
+
 	int samples = SAMPLES_PER_PIXEL;
 
 	float overrideTreshold = 0xff * 0.1f;
@@ -278,21 +322,22 @@ void main() {
 		if (ImGui::TreeNode("Settings"))
 		{
 			ImGui::Checkbox("Animate", &animate);
-			ImGui::SliderInt("Samples", &samples, 1, 64, (std::to_string(samples* SIMD_SIZE).c_str()));
+			ImGui::SliderInt("Samples", &samples, 1, 64, (std::to_string(samples * SIMD_SIZE).c_str()));
 			ImGui::Checkbox("Accumulator", &accumulatorOn);
 			if (accumulatorOn)
 			{
 				float baseTreshold = overrideTreshold / 0xff;
-				if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0, 1, "%.2f"))
+				if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0, 1.5f, "%.2f"))
 				{
 					overrideTreshold = baseTreshold * 0xff;
 				}
 				float invSmooth = 1.f - smoothingFactor;
-				if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 1, "%.2f"))
+				if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 0.999f, "%.4f"))
 				{
 					smoothingFactor = 1.f - invSmooth;
 				}
 			}
+			ImGui::Checkbox("Denoise", &denoise);
 			ImGui::TreePop();
 		}
 		ImGui::End();
@@ -340,17 +385,18 @@ void main() {
 			}
 		}
 
+		glUseProgram(screenShader);
 
 		//Draw to texture
-		uint frameTexture;
-		glGenTextures(1, &frameTexture);
-		glBindTexture(GL_TEXTURE_2D, frameTexture);
+
+		glActiveTexture(GL_TEXTURE0);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, frameTextureData.data());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glGenerateMipmap(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, frameTexture);
 
+		glUniform1i(glGetUniformLocation(screenShader, "image"), 0);
+		glUniform2f(glGetUniformLocation(screenShader, "texResolution"), IMAGE_WIDTH, IMAGE_HEIGHT);
+		glUniform1i(glGetUniformLocation(screenShader, "denoise"), denoise);
+		glBindVertexArray(screenVAO);
 		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
 
 		ImGui::EndFrame();
@@ -362,10 +408,10 @@ void main() {
 		glfwSwapBuffers(window);
 
 
-		glDeleteTextures(1, &frameTexture);
 
 	}
 
+	glDeleteTextures(1, &frameTexture);
 
 
 
