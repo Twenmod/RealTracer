@@ -335,7 +335,7 @@ void renderThreadMain()
 			lastTime = time;
 
 			// Call theApp render method
-			theApp->Trace(frame, frameNormal, traceTime);
+			theApp->Trace(frame, frameNormal);
 			frameReady = true;
 		} // unlock
 		std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Avoid overloading
@@ -455,13 +455,16 @@ __________              ._____________
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
 
-		theApp->Tick(mainDeltaTime);
+		theApp->FastTick(mainDeltaTime);
 
 		if (frameReady)
 		{
 			{
 				std::lock_guard<std::mutex> lock(renderMutex); // Lock the renderThread
 				Accumulate(traceTime, frame, frameNormal); // Copy data
+
+				theApp->Tick(traceTime);
+
 			}//Unlock
 			frameReady = false;
 		}

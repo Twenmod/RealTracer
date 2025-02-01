@@ -36,8 +36,10 @@ void DemoApp::Init()
 
 void DemoApp::Tick(float _deltaTime)
 {
+	m_traceDeltaTime = _deltaTime;
 
-	m_deltaTime = _deltaTime;
+	if (frameRates.size() > frameRateSize) frameRates.erase(frameRates.begin());
+	frameRates.push_back(1.f / _deltaTime);
 
 	if (m_settings.animate) timer += _deltaTime;
 
@@ -50,11 +52,15 @@ void DemoApp::Tick(float _deltaTime)
 
 }
 
-void DemoApp::Trace(std::vector<Vec3>& _colorOut, std::vector<Vec3>& _normalOut, float _deltaTime)
+void DemoApp::FastTick(float _deltaTime)
 {
-	m_traceDeltaTime = _deltaTime;
-	if (frameRates.size() > frameRateSize) frameRates.erase(frameRates.begin());
-	frameRates.push_back(1.f / _deltaTime);
+	m_deltaTime = _deltaTime;
+
+}
+
+void DemoApp::Trace(std::vector<Vec3>& _colorOut, std::vector<Vec3>& _normalOut)
+{
+
 
 	_colorOut = mainCam.Render(scene, m_settings.samples, &_normalOut);
 }

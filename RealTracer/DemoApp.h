@@ -10,7 +10,8 @@ public:
 	DemoApp(GLFWwindow& window, EngineSettings& settings) : App(window, settings) { m_deltaTime = 0; }
 	void Init() override;
 	void Tick(float deltaTime) override;
-	void Trace(std::vector<Vec3>& colorOut, std::vector<Vec3>& normalOut, float deltaTime) override;
+	void FastTick(float deltaTime) override;
+	void Trace(std::vector<Vec3>& colorOut, std::vector<Vec3>& normalOut) override;
 	void Render() override;
 private:
 	Camera mainCam;
