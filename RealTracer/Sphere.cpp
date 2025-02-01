@@ -14,7 +14,7 @@ Sphere::Sphere(E_MATERIALS _material, float _posX, float _posY, float _posZ, flo
 
 xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _rayT, HitInfoGroup& _outHit) const
 {
-	Vec3 oc;
+	Vec3Group oc;
 	oc.x = posX - _ray.origin.x;
 	oc.y = posY - _ray.origin.y;
 	oc.z = posZ - _ray.origin.z;
@@ -50,9 +50,9 @@ xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _ray
 
 	_outHit.t = root;
 	
-	Vec3 point = _ray.At(root);
+	Vec3Group point = _ray.At(root);
 	_outHit.point = point;
-	Vec3 outNormal;
+	Vec3Group outNormal;
 	outNormal.x = (point.x - posX) / radius;
 	outNormal.y = (point.y - posY) / radius;
 	outNormal.z = (point.z - posZ) / radius;

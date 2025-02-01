@@ -17,12 +17,12 @@ class MetalMat :
 	public Material
 {
 public:
-	MetalMat(const Color& albedo, const float glossiness);
+	MetalMat(const ColorGroup& albedo, const float glossiness);
 
-	xs::batch_bool<float>Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, Color& attentuation, RayGroup& rayOut) const override;
+	xs::batch_bool<float>Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, ColorGroup& attentuation, RayGroup& rayOut) const override;
 
 private:
-	Color albedo;
+	ColorGroup albedo;
 	float glossiness;
 };
 

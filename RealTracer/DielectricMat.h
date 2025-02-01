@@ -29,7 +29,7 @@ class DielectricMat :
 public:
 	DielectricMat(const float IOR);
 
-	xs::batch_bool<float> Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, Color& attentuation, RayGroup& rayOut) const override;
+	xs::batch_bool<float> Scatter(const RayGroup& rayIn, const HitInfoGroup& hitInfo, ColorGroup& attentuation, RayGroup& rayOut) const override;
 
 private:
 	float IOR;

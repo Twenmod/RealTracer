@@ -8,13 +8,13 @@ class HitInfoGroup
 public:
 	HitInfoGroup() {};
 
-	Vec3 point;
-	Vec3 normal;
+	Vec3Group point;
+	Vec3Group normal;
 	xs::batch<float> t;
 	xs::batch_bool<float> frontFace;
 	xs::batch<int> material;
 
-	void SetNormal(const RayGroup& _ray, Vec3 _normal)
+	void SetNormal(const RayGroup& _ray, Vec3Group _normal)
 	{
 		frontFace = Dot(_ray.direction, _normal) < 0.f;
 		normal.x = xs::select(frontFace, _normal.x, -_normal.x);

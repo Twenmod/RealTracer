@@ -21,12 +21,12 @@ void DemoApp::Init()
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
 
 	//Add material
-	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.1f), xs::batch<float>(0.2f), xs::batch<float>(0.5f))));
-	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.9f), xs::batch<float>(0.3f), xs::batch<float>(0.3f))));
-	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.8f), xs::batch<float>(0.8f), xs::batch<float>(0.0f))));
+	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.1f), xs::batch<float>(0.2f), xs::batch<float>(0.5f))));
+	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.9f), xs::batch<float>(0.3f), xs::batch<float>(0.3f))));
+	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.8f), xs::batch<float>(0.8f), xs::batch<float>(0.0f))));
 	mainCam.materials.push_back(new DielectricMat(1.1f));
-	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f), xs::batch<float>(0.6f), xs::batch<float>(0.3f)), 1.f));
-	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f)), 0.3f));
+	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f), xs::batch<float>(0.6f), xs::batch<float>(0.3f)), 1.f));
+	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.3f));
 
 
 	mainCam.m_verticalFOV = 40;
@@ -44,13 +44,13 @@ void DemoApp::Tick(float _deltaTime)
 	//dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
 	//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
-	//mainCam.m_position = Vec3Single(sin(timer * 0.5f) * 10.f, 2.f, cos(timer * 0.5f) * 10.f);
-	mainCam.m_position = Vec3Single(0, .5f, 1);
-	mainCam.m_direction = Normalize(Vec3Single(0, 0, -1) - mainCam.m_position);
+	mainCam.m_position = Vec3(sin(timer * 0.5f) * 5.f, 2.f, cos(timer * 0.5f) * 5.f);
+	//mainCam.m_position = Vec3(0, .5f, 1);
+	mainCam.m_direction = Normalize(Vec3(0, 0, -1) - mainCam.m_position);
 
 }
 
-void DemoApp::Trace(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>& _normalOut, float _deltaTime)
+void DemoApp::Trace(std::vector<Vec3>& _colorOut, std::vector<Vec3>& _normalOut, float _deltaTime)
 {
 	m_traceDeltaTime = _deltaTime;
 	if (frameRates.size() > frameRateSize) frameRates.erase(frameRates.begin());

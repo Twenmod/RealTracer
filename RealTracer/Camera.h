@@ -17,8 +17,8 @@ public:
 	Camera* camera{nullptr};
 	int pixelPos{0};
 	uint maxBounces{0};
-	std::vector<Vec3Single>* pixels{nullptr};
-	std::vector<Vec3Single>* primaryNormals{nullptr};
+	std::vector<Vec3>* pixels{nullptr};
+	std::vector<Vec3>* primaryNormals{nullptr};
 	const Hittable* scene{nullptr};
 	int pixelAmount{0};
 	int samples{0};
@@ -28,29 +28,29 @@ public:
 class Camera
 {
 public:
-	Camera(Vec3Single position = Vec3Single(0.f));
+	Camera(Vec3 position = Vec3(0.f));
 
-	std::vector<Vec3Single> Render(const Hittable& scene, int sample, std::vector<Vec3Single>* outNormal = nullptr);
+	std::vector<Vec3> Render(const Hittable& scene, int sample, std::vector<Vec3>* outNormal = nullptr);
 
 	float m_defocusAngle = 3;
 	float m_focusDistance = 1;
-	Vec3Single m_position{Vec3Single(0.f)};
-	Vec3Single m_direction{ Vec3Single(0.f,0.f,-1.f)};
-	Vec3Single m_up{ Vec3Single(0.f,1.f,0.f) };
+	Vec3 m_position{Vec3(0.f)};
+	Vec3 m_direction{ Vec3(0.f,0.f,-1.f)};
+	Vec3 m_up{ Vec3(0.f,1.f,0.f) };
 	float m_verticalFOV{ 90 };
-	Color ShootRay(const RayGroup& ray, xs::batch<int> maxBounces, const Hittable& scene, Color* primaryNormalOut = nullptr) const;
+	ColorGroup ShootRay(const RayGroup& ray, xs::batch<int> maxBounces, const Hittable& scene, ColorGroup* primaryNormalOut = nullptr) const;
 	RayGroup GetRay(xs::batch<float> pixelX, xs::batch<float> pixelY) const;
-	void GetPrimaryRay(float pixelX, float pixelY, Vec3Single* origin, Vec3Single* direction) const;
+	void GetPrimaryRay(float pixelX, float pixelY, Vec3* origin, Vec3* direction) const;
 	std::vector<Material*> materials;
 private:
 
 	void Initialize();
 
-	Point3 SampleDefocusDisk() const
+	Point3Group SampleDefocusDisk() const
 	{
 		// Returns a random point in the camera defocus disk.
-		Vec3 p = RandomCircleUnitVector();
-		Vec3 out;
+		Vec3Group p = RandomCircleUnitVector();
+		Vec3Group out;
 		out.x = m_position.x() + (p.x * defocusDiskU.x() + (p.y * defocusDiskV.x()));
 		out.y = m_position.y() + (p.x * defocusDiskU.y() + (p.y * defocusDiskV.y()));
 		out.z = m_position.z() + (p.x * defocusDiskU.z() + (p.y * defocusDiskV.z()));
@@ -58,14 +58,14 @@ private:
 	}
 
 	//Viewport
-	Vec3Single viewportU, viewportV;
+	Vec3 viewportU, viewportV;
 
-	Vec3Single pixelDeltaU, pixelDeltaV;
-	Vec3Single u, v, w;
-	Vec3Single viewportTopLeft;
-	Vec3Single pixel00;
-	Vec3Single defocusDiskU;
-	Vec3Single defocusDiskV;
+	Vec3 pixelDeltaU, pixelDeltaV;
+	Vec3 u, v, w;
+	Vec3 viewportTopLeft;
+	Vec3 pixel00;
+	Vec3 defocusDiskU;
+	Vec3 defocusDiskV;
 
 };
 

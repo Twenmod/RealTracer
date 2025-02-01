@@ -9,12 +9,12 @@
 #include "xsimd/xsimd.hpp"
 namespace xs = xsimd;
 
-Camera::Camera(Vec3Single _position)
+Camera::Camera(Vec3 _position)
 {
 	m_position = _position;
 }
 
-std::vector<Vec3Single> Camera::Render(const Hittable& scene, int samples, std::vector<Vec3Single>* outNormal)
+std::vector<Vec3> Camera::Render(const Hittable& scene, int samples, std::vector<Vec3>* outNormal)
 {
 	Initialize();
 
@@ -23,7 +23,7 @@ std::vector<Vec3Single> Camera::Render(const Hittable& scene, int samples, std::
 
 	std::vector<RayJob*> jobs;
 
-	std::vector<Vec3Single> pixels(IMAGE_WIDTH * IMAGE_HEIGHT);
+	std::vector<Vec3> pixels(IMAGE_WIDTH * IMAGE_HEIGHT);
 
 	int maxThreads = jobManager->MaxConcurrent();
 	int pixelsPerThread = static_cast<int>(floor((IMAGE_WIDTH * IMAGE_HEIGHT) / maxThreads));
@@ -70,20 +70,20 @@ std::vector<Vec3Single> Camera::Render(const Hittable& scene, int samples, std::
 
 RayGroup Camera::GetRay(xs::batch<float> _pixelX, xs::batch<float> _pixelY) const
 {
-	Vec3 offset = Vec3(RandomBatch() - 0.5f, RandomBatch() - 0.5f, xs::batch<float> (0));
-	Vec3 sample;
+	Vec3Group offset = Vec3Group(RandomBatch() - 0.5f, RandomBatch() - 0.5f, xs::batch<float> (0));
+	Vec3Group sample;
 	sample.x = pixel00.x() + ((_pixelX + offset.x) * pixelDeltaU.x()) + ((_pixelY + offset.y) * pixelDeltaV.x());
 	sample.y = pixel00.y() + ((_pixelX + offset.x) * pixelDeltaU.y()) + ((_pixelY + offset.y) * pixelDeltaV.y());
 	sample.z = pixel00.z() + ((_pixelX + offset.x) * pixelDeltaU.z()) + ((_pixelY + offset.y) * pixelDeltaV.z());
-	Vec3 pos(xs::batch<float>(m_position.x()), xs::batch<float>(m_position.y()), xs::batch<float>(m_position.z()));
-	Point3 rayOrigin = (m_defocusAngle <= 0) ? pos : SampleDefocusDisk();
-	Vec3 rayDirection = sample - rayOrigin;
+	Vec3Group pos(xs::batch<float>(m_position.x()), xs::batch<float>(m_position.y()), xs::batch<float>(m_position.z()));
+	Point3Group rayOrigin = (m_defocusAngle <= 0) ? pos : SampleDefocusDisk();
+	Vec3Group rayDirection = sample - rayOrigin;
 	return RayGroup(rayOrigin, rayDirection);
 }
 
-void Camera::GetPrimaryRay(float _pixelX, float _pixelY, Vec3Single* _origin, Vec3Single* _direction) const
+void Camera::GetPrimaryRay(float _pixelX, float _pixelY, Vec3* _origin, Vec3* _direction) const
 {
-	Vec3Single sample;
+	Vec3 sample;
 	sample.setX(pixel00.x() + ((_pixelX) * pixelDeltaU.x()) + ((_pixelY) * pixelDeltaV.x()));
 	sample.setY(pixel00.y() + ((_pixelX) * pixelDeltaU.y()) + ((_pixelY) * pixelDeltaV.y()));
 	sample.setZ(pixel00.z() + ((_pixelX) * pixelDeltaU.z()) + ((_pixelY) * pixelDeltaV.z()));
@@ -95,19 +95,19 @@ void Camera::GetPrimaryRay(float _pixelX, float _pixelY, Vec3Single* _origin, Ve
 	_direction->setZ(sample.z() - m_position.z());
 }
 
-Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const Hittable& _scene, Color* _primaryNormalOut) const
+ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const Hittable& _scene, ColorGroup* _primaryNormalOut) const
 {
 	xs::batch_bool<int> noBounces = _maxBounces <= 0;
 	if (xs::all(noBounces))
 	{
-		return Color(xs::batch<float>(0.f));
+		return ColorGroup(xs::batch<float>(0.f));
 	}
 	HitInfoGroup hit;
 	xs::batch_bool<float> intersections = _scene.Intersect(_ray, IntervalGroup(MIN_INTERSECTION_DEPTH, INFINITY), hit);
 
 	xs::batch_bool<float> tempTest(false);
 
-	Color attentuation(xs::batch<float>(1.f));
+	ColorGroup attentuation(xs::batch<float>(1.f));
 	if (xs::any(intersections))
 	{
 		RayGroup scattered;
@@ -122,7 +122,7 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 			{
 				const Material* mat = materials[materialIndex];
 
-				Color scatterAttent = attentuation;
+				ColorGroup scatterAttent = attentuation;
 
 				xs::batch_bool<float> scatterMask = mat->Scatter(_ray, hit, scatterAttent, scattered);
 				scatterMask = scatterMask & materialMask;
@@ -132,7 +132,7 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 				attentuation.z = xs::select(materialMask, scatterAttent.z, attentuation.z);
 
 
-				Color reflectAttent = ShootRay(scattered, _maxBounces - 1, _scene);
+				ColorGroup reflectAttent = ShootRay(scattered, _maxBounces - 1, _scene);
 				reflectAttent = attentuation * reflectAttent;
 				attentuation.x = xs::select(scatterMask, reflectAttent.x, attentuation.x);
 				attentuation.y = xs::select(scatterMask, reflectAttent.y, attentuation.y);
@@ -141,9 +141,9 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 		}
 	}
 
-	Vec3 direction = Normalize(_ray.direction);
+	Vec3Group direction = Normalize(_ray.direction);
 	xs::batch<float> a = xs::batch<float>(0.5f) * direction.y + 1.0f;
-	Color backgroundColor = Lerp(Color(xs::batch<float>(1.f)), Color(xs::batch<float>(0.5f), xs::batch<float>(0.7f), xs::batch<float>(1.0f)), a);
+	ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(1.f)), ColorGroup(xs::batch<float>(0.5f), xs::batch<float>(0.7f), xs::batch<float>(1.0f)), a);
 
 	attentuation.x = xs::select(intersections, attentuation.x, backgroundColor.x);
 	attentuation.y = xs::select(intersections, attentuation.y, backgroundColor.y);
@@ -200,14 +200,14 @@ void RayJob::Main()
 		int yPos = static_cast<int>(floor(pos / IMAGE_WIDTH));
 		int xPos = pos - yPos * IMAGE_WIDTH;
 
-		Color pixelColor(0);
-		Color primaryNormal;
+		ColorGroup pixelColor(0);
+		ColorGroup primaryNormal;
 		for (size_t sample = 0; sample < samples; sample++)
 		{
 			RayGroup ray = camera->GetRay(xs::batch<float> (static_cast<float>(xPos)), xs::batch<float> (static_cast<float>(yPos)));
 
 			//Primary ray is const to make normals more consistent
-			Color rayColors;
+			ColorGroup rayColors;
 			if (sample == 0)
 			{
 #ifdef SSE2
@@ -220,8 +220,8 @@ void RayJob::Main()
 				xs::batch_bool<float> firstRay = { true, false, false, false , false, false, false, false, false, false, false, false , false, false, false, false };
 #endif
 
-				Vec3Single primaryOrigin;
-				Vec3Single primaryDirection;
+				Vec3 primaryOrigin;
+				Vec3 primaryDirection;
 				camera->GetPrimaryRay(static_cast<float>(xPos), static_cast<float>(yPos), &primaryOrigin, &primaryDirection);
 
 				ray.origin.x = xs::select(firstRay, xs::batch<float> (primaryOrigin.x()), ray.origin.x);
@@ -241,7 +241,7 @@ void RayJob::Main()
 			pixelColor += rayColors;
 		}
 
-		Vec3Single& outColor = (*pixels)[pos];
+		Vec3& outColor = (*pixels)[pos];
 		float pixelColorR = 0;
 		float pixelColorG = 0;
 		float pixelColorB = 0;
@@ -257,7 +257,7 @@ void RayJob::Main()
 		outColor.setX(pixelColorR * sampleScale);
 		outColor.setY(pixelColorG * sampleScale);
 		outColor.setZ(pixelColorB * sampleScale);		
-		Vec3Single& outNormal = (*primaryNormals)[pos];
+		Vec3& outNormal = (*primaryNormals)[pos];
 		outNormal.setX((primaryNormal.x.get(0) + 1) * 0.5f);
 		outNormal.setY((primaryNormal.y.get(0) + 1) * 0.5f);
 		outNormal.setZ((primaryNormal.z.get(0) + 1) * 0.5f);

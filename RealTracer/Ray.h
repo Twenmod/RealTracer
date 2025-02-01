@@ -12,21 +12,21 @@ public:
 	xs::batch<float> origin;
 	xs::batch<float> direction;
 private:
-	Point3 m_origin;
-	Vec3 m_direction;
+	Point3Group m_origin;
+	Vec3Group m_direction;
 };
 
 class RayGroup
 {
 public:
 	RayGroup() {}
-	RayGroup(Vec3 _origin, Vec3 _direction)
+	RayGroup(Vec3Group _origin, Vec3Group _direction)
 	{
 		origin = _origin;
 		direction = _direction;
 	}
 
-	Vec3 origin;
-	Vec3 direction;
-	Vec3 At(xs::batch<float> t) const;
+	Vec3Group origin;
+	Vec3Group direction;
+	Vec3Group At(xs::batch<float> t) const;
 };

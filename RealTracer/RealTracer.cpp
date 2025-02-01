@@ -228,15 +228,15 @@ void Init()
 
 }
 
-void Accumulate(float deltaTime, std::vector<Vec3Single>& frame, std::vector<Vec3Single>& frameNormal)
+void Accumulate(float deltaTime, std::vector<Vec3>& frame, std::vector<Vec3>& frameNormal)
 {
 
 	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
 	{
 		frameUpdatesData[i] -= deltaTime;
-		Vec3Single frameColor = frame[i];
+		Vec3 frameColor = frame[i];
 		if (settings.showNormals) frameColor = frameNormal[i];
-		Vec3Single frameNormalColor = frameNormal[i];
+		Vec3 frameNormalColor = frameNormal[i];
 		float r = LinearToGammaSpace(frameColor.x()) * 0xff;
 		float g = LinearToGammaSpace(frameColor.y()) * 0xff;
 		float b = LinearToGammaSpace(frameColor.z()) * 0xff;
@@ -319,8 +319,8 @@ std::atomic<bool> frameReady(true);
 float traceTime = 0;
 App* theApp;
 std::mutex renderMutex;
-std::vector<Vec3Single> frameNormal(IMAGE_WIDTH* IMAGE_HEIGHT);
-std::vector<Vec3Single> frame(IMAGE_WIDTH* IMAGE_HEIGHT);
+std::vector<Vec3> frameNormal(IMAGE_WIDTH* IMAGE_HEIGHT);
+std::vector<Vec3> frame(IMAGE_WIDTH* IMAGE_HEIGHT);
 
 void renderThreadMain()
 {

@@ -7,20 +7,20 @@
 #undef min
 #undef max
 
-class Vec3
+class Vec3Group
 {
 public:
 	xs::batch<float> x;
 	xs::batch<float> y;
 	xs::batch<float> z;
 
-	Vec3() {}
-	Vec3(xs::batch<float> _x, xs::batch<float> _y, xs::batch<float> _z) : x(_x), y(_y), z(_z) {}
-	Vec3(xs::batch<float> scalar) : x(scalar), y(scalar), z(scalar) {}
+	Vec3Group() {}
+	Vec3Group(xs::batch<float> _x, xs::batch<float> _y, xs::batch<float> _z) : x(_x), y(_y), z(_z) {}
+	Vec3Group(xs::batch<float> scalar) : x(scalar), y(scalar), z(scalar) {}
 
-	Vec3 operator-() const { return Vec3(-x, -y, -z); }
+	Vec3Group operator-() const { return Vec3Group(-x, -y, -z); }
 
-	Vec3& operator+=(const Vec3& v)
+	Vec3Group& operator+=(const Vec3Group& v)
 	{
 		x += v.x;
 		y += v.y;
@@ -28,7 +28,7 @@ public:
 		return *this;
 	}
 
-	Vec3& operator*=(float t)
+	Vec3Group& operator*=(float t)
 	{
 		x *= t;
 		y *= t;
@@ -36,7 +36,7 @@ public:
 		return *this;
 	}
 
-	Vec3& operator/=(float t)
+	Vec3Group& operator/=(float t)
 	{
 		return *this *= 1 / t;
 	}
@@ -58,14 +58,14 @@ public:
 	}
 
 
-	static Vec3 Random()
+	static Vec3Group Random()
 	{
-		return Vec3(RandomBatch() - 0.5f * 2.f, RandomBatch() - 0.5f * 2.f, RandomBatch() - 0.5f * 2.f);
+		return Vec3Group(RandomBatch() - 0.5f * 2.f, RandomBatch() - 0.5f * 2.f, RandomBatch() - 0.5f * 2.f);
 	}
 
-	static Vec3 Random(xs::batch<float> min, xs::batch<float> max)
+	static Vec3Group Random(xs::batch<float> min, xs::batch<float> max)
 	{
-		return Vec3(RandomBatch(min, max), RandomBatch(min, max), RandomBatch(min, max));
+		return Vec3Group(RandomBatch(min, max), RandomBatch(min, max), RandomBatch(min, max));
 	}
 
 
@@ -73,65 +73,65 @@ public:
 };
 
 // point3 is just an alias for vec3, but useful for geometric clarity in the code.
-using Point3 = Vec3;
+using Point3Group = Vec3Group;
 
 
 // Vector Utility Functions
 
-inline std::ostream& operator<<(std::ostream& out, const Vec3& v)
+inline std::ostream& operator<<(std::ostream& out, const Vec3Group& v)
 {
 	return out << v.x << ' ' << v.y << ' ' << v.z;
 }
 
-inline Vec3 operator+(const Vec3& u, const Vec3& v)
+inline Vec3Group operator+(const Vec3Group& u, const Vec3Group& v)
 {
-	return Vec3(u.x + v.x, u.y + v.y, u.z + v.z);
+	return Vec3Group(u.x + v.x, u.y + v.y, u.z + v.z);
 }
 
-inline Vec3 operator-(const Vec3& u, const Vec3& v)
+inline Vec3Group operator-(const Vec3Group& u, const Vec3Group& v)
 {
-	return Vec3(u.x - v.x, u.y - v.y, u.z - v.z);
+	return Vec3Group(u.x - v.x, u.y - v.y, u.z - v.z);
 }
 
-inline Vec3 operator*(const Vec3& u, const Vec3& v)
+inline Vec3Group operator*(const Vec3Group& u, const Vec3Group& v)
 {
-	return Vec3(u.x * v.x, u.y * v.y, u.z * v.z);
+	return Vec3Group(u.x * v.x, u.y * v.y, u.z * v.z);
 }
 
-inline Vec3 operator*(xs::batch<float> t, const Vec3& v)
+inline Vec3Group operator*(xs::batch<float> t, const Vec3Group& v)
 {
-	return Vec3(t * v.x, t * v.y, t * v.z);
+	return Vec3Group(t * v.x, t * v.y, t * v.z);
 }
 
-inline Vec3 operator*(const Vec3& v, xs::batch<float> t)
+inline Vec3Group operator*(const Vec3Group& v, xs::batch<float> t)
 {
 	return t * v;
 }
 
-inline Vec3 operator/(const Vec3& v, xs::batch<float> t)
+inline Vec3Group operator/(const Vec3Group& v, xs::batch<float> t)
 {
 	return (1 / t) * v;
 }
 
-inline xs::batch<float> Dot(const Vec3& u, const Vec3& v)
+inline xs::batch<float> Dot(const Vec3Group& u, const Vec3Group& v)
 {
 	return u.x * v.x
 		+ u.y * v.y
 		+ u.z * v.z;
 }
 
-inline Vec3 Cross(const Vec3& u, const Vec3& v)
+inline Vec3Group Cross(const Vec3Group& u, const Vec3Group& v)
 {
-	return Vec3(u.y * v.z - u.z * v.y,
+	return Vec3Group(u.y * v.z - u.z * v.y,
 		u.z * v.x - u.x * v.z,
 		u.x * v.y - u.y * v.x);
 }
 
-inline Vec3 Normalize(const Vec3& v)
+inline Vec3Group Normalize(const Vec3Group& v)
 {
 	xs::batch<float> length = v.Length();
 	xs::batch_bool<float> isZero = length <= 0.001f;
-	Vec3 normalized;
+	Vec3Group normalized;
 	normalized.x = xs::select(isZero, xs::batch<float>(0.f), v.x / length);
 	normalized.y = xs::select(isZero, xs::batch<float>(0.f), v.y / length);
 	normalized.z = xs::select(isZero, xs::batch<float>(0.f), v.z / length);
@@ -139,31 +139,31 @@ inline Vec3 Normalize(const Vec3& v)
 	return normalized;
 }
 
-inline Vec3 RandomUnitVector()
+inline Vec3Group RandomUnitVector()
 {
 	while (true)
 	{
-		Vec3 vec = Vec3::Random(xs::batch<float>(-1), xs::batch<float>(1));
+		Vec3Group vec = Vec3Group::Random(xs::batch<float>(-1), xs::batch<float>(1));
 
 		return Normalize(vec);
 	}
 }
 
-inline Vec3 RandomCircleUnitVector()
+inline Vec3Group RandomCircleUnitVector()
 {
-	Vec3 point = Vec3(RandomBatch(xs::batch<float> (- 1), xs::batch<float> (1)), RandomBatch(xs::batch<float>(-1), xs::batch<float>(1)), xs::batch<float>(0));
+	Vec3Group point = Vec3Group(RandomBatch(xs::batch<float> (- 1), xs::batch<float> (1)), RandomBatch(xs::batch<float>(-1), xs::batch<float>(1)), xs::batch<float>(0));
 	return point / point.Length();
 }
 
-inline Vec3 Reflect(const Vec3& vector, const Vec3& normal)
+inline Vec3Group Reflect(const Vec3Group& vector, const Vec3Group& normal)
 {
 	return vector - 2.f * Dot(vector, normal) * normal;
 }
 
-inline Vec3 Refract(const Vec3& vector, const Vec3& normal, xs::batch<float> relativeIOR)
+inline Vec3Group Refract(const Vec3Group& vector, const Vec3Group& normal, xs::batch<float> relativeIOR)
 {
 	xs::batch<float> cosTheta = xs::min(Dot(-vector, normal), xs::batch<float> (1.0f));
-	Vec3 perpandicular = relativeIOR * (vector + cosTheta * normal);
-	Vec3 parallel = -sqrt(abs(1.f - perpandicular.Length2())) * normal;
+	Vec3Group perpandicular = relativeIOR * (vector + cosTheta * normal);
+	Vec3Group parallel = -sqrt(abs(1.f - perpandicular.Length2())) * normal;
 	return perpandicular + parallel;
 }

@@ -27,10 +27,10 @@ inline xs::batch<float> Lerp(xs::batch<float> start, xs::batch<float> end, xs::b
 {
 	return(1 - a) * start + a * end;
 }
-inline Vec3 Lerp(Vec3 start, Vec3 end, xs::batch<float> a)
+inline Vec3Group Lerp(Vec3Group start, Vec3Group end, xs::batch<float> a)
 {
 	xs::batch<float> x = Lerp(start.x, end.x, a);
 	xs::batch<float> y = Lerp(start.y, end.y, a);
 	xs::batch<float> z = Lerp(start.z, end.z, a);
-	return Vec3(x, y, z);
+	return Vec3Group(x, y, z);
 }

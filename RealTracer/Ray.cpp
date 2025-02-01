@@ -18,7 +18,7 @@ xs::batch<float> Ray::At(float t) const
 	return origin + direction * t;
 }
 
-Vec3 RayGroup::At(xs::batch<float> t) const
+Vec3Group RayGroup::At(xs::batch<float> t) const
 {
 	return origin + direction * t;
 }

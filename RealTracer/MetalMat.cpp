@@ -19,15 +19,15 @@
 //	return (dot(reflectDir, _hitInfo.m_normal) > 0);
 //}
 
-MetalMat::MetalMat(const Color& _albedo, const float _glossiness)
+MetalMat::MetalMat(const ColorGroup& _albedo, const float _glossiness)
 {
 	albedo = _albedo;
 	glossiness = _glossiness;
 }
 
-xs::batch_bool<float> MetalMat::Scatter(const RayGroup& _rayIn, const HitInfoGroup& _hitInfo, Color& _attentuation, RayGroup& _rayOut) const
+xs::batch_bool<float> MetalMat::Scatter(const RayGroup& _rayIn, const HitInfoGroup& _hitInfo, ColorGroup& _attentuation, RayGroup& _rayOut) const
 {
-	Vec3 reflectDir = Reflect(_rayIn.direction, _hitInfo.normal);
+	Vec3Group reflectDir = Reflect(_rayIn.direction, _hitInfo.normal);
 	reflectDir = Normalize(reflectDir) + (glossiness * RandomUnitVector());
 	_rayOut = RayGroup(_hitInfo.point, reflectDir);
 	_attentuation = albedo;

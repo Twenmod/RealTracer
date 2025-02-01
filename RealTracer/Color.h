@@ -2,7 +2,7 @@
 #include "Interval.h"
 #include "Vec3.h"
 
-using Color = Vec3;
+using ColorGroup = Vec3Group;
 
 inline float LinearToGammaSpace(float _linear)
 {
