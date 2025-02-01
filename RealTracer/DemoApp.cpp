@@ -36,8 +36,7 @@ void DemoApp::Init()
 
 void DemoApp::Tick(float _deltaTime)
 {
-	if (frameRates.size() > frameRateSize) frameRates.erase(frameRates.begin());
-	frameRates.push_back(1.f / _deltaTime);
+
 	m_deltaTime = _deltaTime;
 
 	if (m_settings.animate) timer += _deltaTime;
@@ -51,9 +50,17 @@ void DemoApp::Tick(float _deltaTime)
 
 }
 
-void DemoApp::Render(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>& _normalOut)
+void DemoApp::Trace(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>& _normalOut, float _deltaTime)
 {
+	m_traceDeltaTime = _deltaTime;
+	if (frameRates.size() > frameRateSize) frameRates.erase(frameRates.begin());
+	frameRates.push_back(1.f / _deltaTime);
 
+	_colorOut = mainCam.Render(scene, m_settings.samples, &_normalOut);
+}
+
+void DemoApp::Render()
+{
 	static bool open = true;
 	ImGui::SetNextWindowSize(ImVec2(220, 400), ImGuiCond_Appearing);
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Appearing);
@@ -68,8 +75,14 @@ void DemoApp::Render(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>
 			tot += frame;
 		}
 		tot /= frameRates.size();
-		ImGui::Text("FPS: %.f (%.2fms)", tot, m_deltaTime * 1000.f);
-
+		if (m_deltaTime > 0.2f)
+		{
+			ImGui::Text("SPF: %.2fs (%.2fms)", (m_deltaTime), m_deltaTime * 1000.f);
+		}
+		else
+		{
+			ImGui::Text("FPS: %.f (%.2fms)", tot, m_deltaTime * 1000.f);
+		}
 		ImGui::TreePop();
 	}
 	ImGui::SetNextItemOpen(true, ImGuiCond_Appearing);
@@ -106,10 +119,4 @@ void DemoApp::Render(std::vector<Vec3Single>& _colorOut, std::vector<Vec3Single>
 		ImGui::TreePop();
 	}
 	ImGui::End();
-
-	_colorOut = mainCam.Render(scene, m_settings.samples, &_normalOut);
-}
-
-void DemoApp::LateRender()
-{
 }

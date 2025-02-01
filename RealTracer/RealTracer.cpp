@@ -314,6 +314,35 @@ void RenderScreen()
 	glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
 }
 
+std::atomic<bool> isRunning(true);
+std::atomic<bool> frameReady(true);
+float traceTime = 0;
+App* theApp;
+std::mutex renderMutex;
+std::vector<Vec3Single> frameNormal(IMAGE_WIDTH* IMAGE_HEIGHT);
+std::vector<Vec3Single> frame(IMAGE_WIDTH* IMAGE_HEIGHT);
+
+void renderThreadMain()
+{
+	double lastTime = glfwGetTime();
+	while (isRunning)
+	{
+		{
+			std::lock_guard<std::mutex> lock(renderMutex);
+
+			double time = glfwGetTime();
+			traceTime = time - lastTime;
+			lastTime = time;
+
+			// Call theApp render method
+			theApp->Trace(frame, frameNormal, traceTime);
+			frameReady = true;
+		} // unlock
+		std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Avoid overloading
+	}
+}
+
+
 int main()
 {
 
@@ -407,37 +436,39 @@ __________              ._____________
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
 
-	App* theApp = new DemoApp(*window, settings);
+	theApp = new DemoApp(*window, settings);
 	theApp->Init();
 
 
 
 	double lastTime = glfwGetTime();
 
-
+	std::thread renderThread(renderThreadMain); // Launch the rendering thread
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 		double time = glfwGetTime();
-		float deltaTime = static_cast<float>((time - lastTime));
+		float mainDeltaTime = static_cast<float>((time - lastTime));
 		lastTime = time;
 
 		ImGui_ImplGlfw_NewFrame();
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
 
-		theApp->Tick(deltaTime);
+		theApp->Tick(mainDeltaTime);
 
-		std::vector<Vec3Single> frameNormal(IMAGE_WIDTH * IMAGE_HEIGHT);
-		std::vector<Vec3Single> frame(IMAGE_WIDTH * IMAGE_HEIGHT);
-
-		theApp->Render(frame, frameNormal);
-
-		Accumulate(deltaTime, frame, frameNormal);
+		if (frameReady)
+		{
+			{
+				std::lock_guard<std::mutex> lock(renderMutex); // Lock the renderThread
+				Accumulate(traceTime, frame, frameNormal); // Copy data
+			}//Unlock
+			frameReady = false;
+		}
 
 		RenderScreen();
 
-		theApp->LateRender();
+		theApp->Render();
 
 		ImGui::EndFrame();
 
@@ -449,6 +480,10 @@ __________              ._____________
 		theApp->PostRender();
 
 	}
+
+	isRunning = false;
+	renderThread.join(); // Make sure renderthread exited
+
 
 	glDeleteTextures(1, &frameTexture);
 	glDeleteTextures(1, &frameNormalTexture);
