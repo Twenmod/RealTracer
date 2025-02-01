@@ -75,13 +75,13 @@ void DemoApp::Render()
 			tot += frame;
 		}
 		tot /= frameRates.size();
-		if (m_deltaTime > 0.2f)
+		if (m_traceDeltaTime > 0.2f)
 		{
-			ImGui::Text("SPF: %.2fs (%.2fms)", (m_deltaTime), m_deltaTime * 1000.f);
+			ImGui::Text("SPF: %.2fs (%.2fms)", (m_traceDeltaTime), m_traceDeltaTime * 1000.f);
 		}
 		else
 		{
-			ImGui::Text("FPS: %.f (%.2fms)", tot, m_deltaTime * 1000.f);
+			ImGui::Text("FPS: %.f (%.2fms)", tot, m_traceDeltaTime * 1000.f);
 		}
 		ImGui::TreePop();
 	}
