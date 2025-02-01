@@ -29,7 +29,7 @@ void DemoApp::Init()
 	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f)), 0.3f));
 
 
-	mainCam.m_verticalFOV = 20;
+	mainCam.m_verticalFOV = 40;
 	mainCam.m_defocusAngle = 0.0f;
 	mainCam.m_focusDistance = 10.0f;
 }
@@ -46,7 +46,7 @@ void DemoApp::Tick(float _deltaTime)
 	//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
 	//mainCam.m_position = Vec3Single(sin(timer * 0.5f) * 10.f, 2.f, cos(timer * 0.5f) * 10.f);
-	mainCam.m_position = Vec3Single(0, .5f, 4);
+	mainCam.m_position = Vec3Single(0, .5f, 1);
 	mainCam.m_direction = Normalize(Vec3Single(0, 0, -1) - mainCam.m_position);
 
 }

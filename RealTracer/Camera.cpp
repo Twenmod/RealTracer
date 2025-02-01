@@ -143,16 +143,16 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 
 	Vec3 direction = Normalize(_ray.direction);
 	xs::batch<float> a = xs::batch<float>(0.5f) * direction.y + 1.0f;
-	Color backgroundColor = Lerp(Color(xs::batch<float>(1.f)), Color(xs::batch<float>(0.6f), xs::batch<float>(0.8f), xs::batch<float>(1.0f)), a);
+	Color backgroundColor = Lerp(Color(xs::batch<float>(1.f)), Color(xs::batch<float>(0.5f), xs::batch<float>(0.7f), xs::batch<float>(1.0f)), a);
 
 	attentuation.x = xs::select(intersections, attentuation.x, backgroundColor.x);
 	attentuation.y = xs::select(intersections, attentuation.y, backgroundColor.y);
 	attentuation.z = xs::select(intersections, attentuation.z, backgroundColor.z);
 
 	//No bounces
-	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(1.f), attentuation.x);
-	attentuation.y = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(1.f), attentuation.y);
-	attentuation.z = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(1.f), attentuation.z);
+	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.x);
+	attentuation.y = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.y);
+	attentuation.z = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.z);
 
 	//If first bounce return primary normal
 	xs::batch_bool<int> firstHit = _maxBounces == xs::batch<int>(MAX_BOUNCES);

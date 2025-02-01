@@ -237,9 +237,9 @@ void Accumulate(float deltaTime, std::vector<Vec3Single>& frame, std::vector<Vec
 		Vec3Single frameColor = frame[i];
 		if (settings.showNormals) frameColor = frameNormal[i];
 		Vec3Single frameNormalColor = frameNormal[i];
-		float r = frameColor.x() * 0xff;
-		float g = frameColor.y() * 0xff;
-		float b = frameColor.z() * 0xff;
+		float r = LinearToGammaSpace(frameColor.x()) * 0xff;
+		float g = LinearToGammaSpace(frameColor.y()) * 0xff;
+		float b = LinearToGammaSpace(frameColor.z()) * 0xff;
 		float nR = frameNormalColor.x() * 0xff;
 		float nG = frameNormalColor.y() * 0xff;
 		float nB = frameNormalColor.z() * 0xff;
