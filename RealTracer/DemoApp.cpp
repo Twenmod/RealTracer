@@ -12,21 +12,21 @@ void DemoApp::Init()
 {
 
 	//Add objects to scene
-	scene.Add(*new Sphere(diffuse, 0.f, 0.f, 1.f, 0.5f));
-	scene.Add(*new Sphere(red, 1.f, 0.f, -1.f, 0.5f));
-	scene.Add(*new Sphere(metal, 3.f, 0.3f, 0.f, 0.8f));
-	scene.Add(*new Sphere(mirror, 0.f, 0.f, 0.f, 0.5f));
+	//scene.Add(*new Sphere(red, 1.f, 0.f, -1.f, 0.5f));
+	scene.Add(*new Sphere(diffuse, 0.f, 0.f, -1.2f, 0.5f));
+	scene.Add(*new Sphere(metal, 1.f, 0.0f, -1.f, 0.5f));
+	scene.Add(*new Sphere(mirror, -1.f, 0.f, -1.f, 0.5f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
 
 	//Add material
-	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.5f), xs::batch<float>(0.5f), xs::batch<float>(0.5f))));
+	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.1f), xs::batch<float>(0.2f), xs::batch<float>(0.5f))));
 	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.9f), xs::batch<float>(0.3f), xs::batch<float>(0.3f))));
-	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.2f), xs::batch<float>(0.8f), xs::batch<float>(0.2f))));
+	mainCam.materials.push_back(new LambertianMat(Color(xs::batch<float>(0.8f), xs::batch<float>(0.8f), xs::batch<float>(0.0f))));
 	mainCam.materials.push_back(new DielectricMat(1.1f));
+	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f), xs::batch<float>(0.6f), xs::batch<float>(0.3f)), 1.f));
 	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.8f)), 0.3f));
-	mainCam.materials.push_back(new MetalMat(Color(xs::batch<float>(0.9f)), 0.0f));
 
 
 	mainCam.m_verticalFOV = 20;
@@ -42,11 +42,12 @@ void DemoApp::Tick(float _deltaTime)
 
 	if (m_settings.animate) timer += _deltaTime;
 
-	dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
-	dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
+	//dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
+	//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
-	mainCam.m_position = Vec3Single(sin(timer * 0.5f) * 10.f, 2.f, cos(timer * 0.5f) * 10.f);
-	mainCam.m_direction = Normalize(Vec3Single(0, 0, 0) - mainCam.m_position);
+	//mainCam.m_position = Vec3Single(sin(timer * 0.5f) * 10.f, 2.f, cos(timer * 0.5f) * 10.f);
+	mainCam.m_position = Vec3Single(0, .5f, 4);
+	mainCam.m_direction = Normalize(Vec3Single(0, 0, -1) - mainCam.m_position);
 
 }
 

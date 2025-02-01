@@ -17,7 +17,7 @@ constexpr int IMAGE_HEIGHT = 768u/4u;
 constexpr int SAMPLES_PER_PIXEL = 1;
 
 constexpr int MAX_BOUNCES = 4;
-constexpr float MIN_INTERSECTION_DEPTH = 0.001f;
+constexpr float MIN_INTERSECTION_DEPTH = 0.0001f;
 
 
 #define MULTITHREAD

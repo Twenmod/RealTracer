@@ -70,7 +70,7 @@ std::vector<Vec3Single> Camera::Render(const Hittable& scene, int samples, std::
 
 RayGroup Camera::GetRay(xs::batch<float> _pixelX, xs::batch<float> _pixelY) const
 {
-	Vec3 offset = Vec3(RandomBatch() - 0.5f, RandomBatch() - 0.5f, 0);
+	Vec3 offset = Vec3(RandomBatch() - 0.5f, RandomBatch() - 0.5f, xs::batch<float> (0));
 	Vec3 sample;
 	sample.x = pixel00.x() + ((_pixelX + offset.x) * pixelDeltaU.x()) + ((_pixelY + offset.y) * pixelDeltaV.x());
 	sample.y = pixel00.y() + ((_pixelX + offset.x) * pixelDeltaU.y()) + ((_pixelY + offset.y) * pixelDeltaV.y());
@@ -100,10 +100,12 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 	xs::batch_bool<int> noBounces = _maxBounces <= 0;
 	if (xs::all(noBounces))
 	{
-		return Color(xs::batch<float>(1.f));
+		return Color(xs::batch<float>(0.f));
 	}
 	HitInfoGroup hit;
 	xs::batch_bool<float> intersections = _scene.Intersect(_ray, IntervalGroup(MIN_INTERSECTION_DEPTH, INFINITY), hit);
+
+	xs::batch_bool<float> tempTest(false);
 
 	Color attentuation(xs::batch<float>(1.f));
 	if (xs::any(intersections))
@@ -113,8 +115,9 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 
 		for (int materialIndex = 0; materialIndex < materials.size(); materialIndex++)
 		{
-			xs::batch_bool<float> materialMask = intersections & xs::batch_bool_cast<float>(hit.material == xs::batch<int>(materialIndex));
-
+			xs::batch_bool<float> hitMaterial = xs::batch_bool_cast<float>(hit.material == xs::batch<int>(materialIndex));
+			xs::batch_bool<float> materialMask = intersections & hitMaterial;
+			tempTest = tempTest | materialMask;
 			if (xs::any(materialMask))
 			{
 				const Material* mat = materials[materialIndex];
@@ -122,9 +125,11 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 				Color scatterAttent = attentuation;
 
 				xs::batch_bool<float> scatterMask = mat->Scatter(_ray, hit, scatterAttent, scattered);
-				attentuation.x = xs::select(scatterMask, scatterAttent.x, attentuation.x);
-				attentuation.y = xs::select(scatterMask, scatterAttent.y, attentuation.y);
-				attentuation.z = xs::select(scatterMask, scatterAttent.z, attentuation.z);
+				scatterMask = scatterMask & materialMask;
+				
+				attentuation.x = xs::select(materialMask, scatterAttent.x, attentuation.x);
+				attentuation.y = xs::select(materialMask, scatterAttent.y, attentuation.y);
+				attentuation.z = xs::select(materialMask, scatterAttent.z, attentuation.z);
 
 
 				Color reflectAttent = ShootRay(scattered, _maxBounces - 1, _scene);
@@ -132,7 +137,6 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 				attentuation.x = xs::select(scatterMask, reflectAttent.x, attentuation.x);
 				attentuation.y = xs::select(scatterMask, reflectAttent.y, attentuation.y);
 				attentuation.z = xs::select(scatterMask, reflectAttent.z, attentuation.z);
-
 			}
 		}
 	}
@@ -146,9 +150,9 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 	attentuation.z = xs::select(intersections, attentuation.z, backgroundColor.z);
 
 	//No bounces
-	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.x);
-	attentuation.y = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.y);
-	attentuation.z = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.z);
+	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(1.f), attentuation.x);
+	attentuation.y = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(1.f), attentuation.y);
+	attentuation.z = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(1.f), attentuation.z);
 
 	//If first bounce return primary normal
 	xs::batch_bool<int> firstHit = _maxBounces == xs::batch<int>(MAX_BOUNCES);
@@ -158,7 +162,6 @@ Color Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const H
 		_primaryNormalOut->y = xs::select(intersections, hit.normal.y, xs::batch<float>(0.f));
 		_primaryNormalOut->z = xs::select(intersections, hit.normal.z, xs::batch<float>(0.f));
 	}
-
 	return attentuation;
 
 }
