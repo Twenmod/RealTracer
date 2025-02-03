@@ -4,8 +4,11 @@
 
 using ColorGroup = Vec3Group;
 
+using Color = Vec3;
+
 inline float LinearToGammaSpace(float _linear)
 {
+	_linear = std::min(_linear, 1.f);
 	if (_linear > 0)
 	{
 		return std::sqrt(_linear);

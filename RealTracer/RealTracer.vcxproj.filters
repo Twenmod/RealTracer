@@ -24,15 +24,18 @@
     <Filter Include="Demos">
       <UniqueIdentifier>{338cc416-7555-4d36-bfdb-ce8165edccfa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Lib">
+      <UniqueIdentifier>{de19a01e-ad8e-4d66-8414-f3c577ee8d98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RealTracer\Abstracts">
+      <UniqueIdentifier>{ef65c5d7-90b9-4e57-b9fb-26d7763dd3ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RealTracer.cpp">
       <Filter>RealTracer</Filter>
     </ClCompile>
     <ClCompile Include="Ray.cpp">
-      <Filter>RealTracer</Filter>
-    </ClCompile>
-    <ClCompile Include="Hittable.cpp">
       <Filter>RealTracer</Filter>
     </ClCompile>
     <ClCompile Include="Sphere.cpp">
@@ -47,9 +50,6 @@
     <ClCompile Include="Camera.cpp">
       <Filter>RealTracer</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>RealTracer</Filter>
-    </ClCompile>
     <ClCompile Include="LambertianMat.cpp">
       <Filter>RealTracer\Materials</Filter>
     </ClCompile>
@@ -60,9 +60,6 @@
       <Filter>RealTracer\Materials</Filter>
     </ClCompile>
     <ClCompile Include="Jobmanager.cpp">
-      <Filter>RealTracer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\include\glad\glad.c">
       <Filter>RealTracer</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
@@ -95,6 +92,24 @@
     <ClCompile Include="DemoApp.cpp">
       <Filter>Demos</Filter>
     </ClCompile>
+    <ClCompile Include="EmissiveMat.cpp">
+      <Filter>RealTracer\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\glad\glad.c">
+      <Filter>Lib</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>RealTracer\Abstracts</Filter>
+    </ClCompile>
+    <ClCompile Include="Hittable.cpp">
+      <Filter>RealTracer\Abstracts</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>RealTracer\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>RealTracer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ray.h">
@@ -111,9 +126,6 @@
     </ClInclude>
     <ClInclude Include="Vec3.h">
       <Filter>RealTracer\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Hittable.h">
-      <Filter>RealTracer</Filter>
     </ClInclude>
     <ClInclude Include="Sphere.h">
       <Filter>RealTracer\Objects</Filter>
@@ -133,9 +145,6 @@
     <ClInclude Include="Random.h">
       <Filter>RealTracer\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>RealTracer</Filter>
-    </ClInclude>
     <ClInclude Include="LambertianMat.h">
       <Filter>RealTracer\Materials</Filter>
     </ClInclude>
@@ -151,9 +160,6 @@
     <ClInclude Include="Vec3Single.h">
       <Filter>RealTracer\Math</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\glad\glad.h" />
-    <ClInclude Include="..\include\KHR\khrplatform.h" />
-    <ClInclude Include="Logger.h" />
     <ClInclude Include="imgui\imconfig.h">
       <Filter>RealTracer\ImGui</Filter>
     </ClInclude>
@@ -183,6 +189,30 @@
     </ClInclude>
     <ClInclude Include="DemoApp.h">
       <Filter>Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="EmissiveMat.h">
+      <Filter>RealTracer\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\KHR\khrplatform.h">
+      <Filter>Lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\glad\glad.h">
+      <Filter>Lib</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>RealTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>RealTracer\Abstracts</Filter>
+    </ClInclude>
+    <ClInclude Include="Hittable.h">
+      <Filter>RealTracer\Abstracts</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>RealTracer\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>RealTracer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

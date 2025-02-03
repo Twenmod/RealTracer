@@ -291,8 +291,10 @@
     </ClCompile>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="DemoApp.cpp" />
     <ClCompile Include="DielectricMat.cpp" />
+    <ClCompile Include="EmissiveMat.cpp" />
     <ClCompile Include="Hittable.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_glfw.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -351,6 +353,7 @@
     </ClCompile>
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Sphere.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\glad\glad.h" />
@@ -359,8 +362,10 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Cube.h" />
     <ClInclude Include="DemoApp.h" />
     <ClInclude Include="DielectricMat.h" />
+    <ClInclude Include="EmissiveMat.h" />
     <ClInclude Include="Hittable.h" />
     <ClInclude Include="imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="imgui\backends\imgui_impl_opengl3.h" />
@@ -380,6 +385,7 @@
     <ClInclude Include="Random.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Sphere.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vec3.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Ray.h" />

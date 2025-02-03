@@ -70,7 +70,7 @@ std::vector<Vec3> Camera::Render(const Hittable& scene, int samples, std::vector
 
 RayGroup Camera::GetRay(xs::batch<float> _pixelX, xs::batch<float> _pixelY) const
 {
-	Vec3Group offset = Vec3Group(RandomBatch() - 0.5f, RandomBatch() - 0.5f, xs::batch<float> (0));
+	Vec3Group offset = Vec3Group(RandomBatch() - 0.5f, RandomBatch() - 0.5f, xs::batch<float>(0));
 	Vec3Group sample;
 	sample.x = pixel00.x() + ((_pixelX + offset.x) * pixelDeltaU.x()) + ((_pixelY + offset.y) * pixelDeltaV.x());
 	sample.y = pixel00.y() + ((_pixelX + offset.x) * pixelDeltaU.y()) + ((_pixelY + offset.y) * pixelDeltaV.y());
@@ -84,9 +84,9 @@ RayGroup Camera::GetRay(xs::batch<float> _pixelX, xs::batch<float> _pixelY) cons
 void Camera::GetPrimaryRay(float _pixelX, float _pixelY, Vec3* _origin, Vec3* _direction) const
 {
 	Vec3 sample;
-	sample.setX(pixel00.x() + ((_pixelX) * pixelDeltaU.x()) + ((_pixelY) * pixelDeltaV.x()));
-	sample.setY(pixel00.y() + ((_pixelX) * pixelDeltaU.y()) + ((_pixelY) * pixelDeltaV.y()));
-	sample.setZ(pixel00.z() + ((_pixelX) * pixelDeltaU.z()) + ((_pixelY) * pixelDeltaV.z()));
+	sample.setX(pixel00.x() + ((_pixelX)*pixelDeltaU.x()) + ((_pixelY)*pixelDeltaV.x()));
+	sample.setY(pixel00.y() + ((_pixelX)*pixelDeltaU.y()) + ((_pixelY)*pixelDeltaV.y()));
+	sample.setZ(pixel00.z() + ((_pixelX)*pixelDeltaU.z()) + ((_pixelY)*pixelDeltaV.z()));
 	_origin->setX(m_position.x());
 	_origin->setY(m_position.y());
 	_origin->setZ(m_position.z());
@@ -121,29 +121,39 @@ ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, co
 			if (xs::any(materialMask))
 			{
 				const Material* mat = materials[materialIndex];
-
 				ColorGroup scatterAttent = attentuation;
 
 				xs::batch_bool<float> scatterMask = mat->Scatter(_ray, hit, scatterAttent, scattered);
 				scatterMask = scatterMask & materialMask;
-				
+
 				attentuation.x = xs::select(materialMask, scatterAttent.x, attentuation.x);
 				attentuation.y = xs::select(materialMask, scatterAttent.y, attentuation.y);
 				attentuation.z = xs::select(materialMask, scatterAttent.z, attentuation.z);
 
-
-				ColorGroup reflectAttent = ShootRay(scattered, _maxBounces - 1, _scene);
-				reflectAttent = attentuation * reflectAttent;
-				attentuation.x = xs::select(scatterMask, reflectAttent.x, attentuation.x);
-				attentuation.y = xs::select(scatterMask, reflectAttent.y, attentuation.y);
-				attentuation.z = xs::select(scatterMask, reflectAttent.z, attentuation.z);
+				if (xs::any(scatterMask))
+				{
+					ColorGroup reflectAttent = ShootRay(scattered, _maxBounces - 1, _scene);
+					reflectAttent = attentuation * reflectAttent;
+					attentuation.x = xs::select(scatterMask, reflectAttent.x, attentuation.x);
+					attentuation.y = xs::select(scatterMask, reflectAttent.y, attentuation.y);
+					attentuation.z = xs::select(scatterMask, reflectAttent.z, attentuation.z);
+				}
+				if (xs::any(!scatterMask))
+				{
+					ColorGroup emittedAttent = mat->Emitted();
+					xs::batch_bool<float> absorbedMask = ~scatterMask & materialMask;
+					attentuation.x = xs::select(absorbedMask, emittedAttent.x, attentuation.x);
+					attentuation.y = xs::select(absorbedMask, emittedAttent.y, attentuation.y);
+					attentuation.z = xs::select(absorbedMask, emittedAttent.z, attentuation.z);
+				}
 			}
 		}
 	}
 
 	Vec3Group direction = Normalize(_ray.direction);
 	xs::batch<float> a = xs::batch<float>(0.5f) * direction.y + 1.0f;
-	ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(1.f)), ColorGroup(xs::batch<float>(0.5f), xs::batch<float>(0.7f), xs::batch<float>(1.0f)), a);
+	ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(0.2f), xs::batch<float>(0.2f), xs::batch<float>(0.4f)), ColorGroup(xs::batch<float>(0.5f), xs::batch<float>(0.1f), xs::batch<float>(0.1f)), 1.f - a);
+	//ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(0.0f), xs::batch<float>(0.f), xs::batch<float>(0.f)), ColorGroup(xs::batch<float>(0.f), xs::batch<float>(0.f), xs::batch<float>(0.f)), 1.f - a);
 
 	//No bounces
 	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.x);
@@ -210,7 +220,7 @@ void RayJob::Main()
 		ColorGroup primaryNormal;
 		for (size_t sample = 0; sample < samples; sample++)
 		{
-			RayGroup ray = camera->GetRay(xs::batch<float> (static_cast<float>(xPos)), xs::batch<float> (static_cast<float>(yPos)));
+			RayGroup ray = camera->GetRay(xs::batch<float>(static_cast<float>(xPos)), xs::batch<float>(static_cast<float>(yPos)));
 
 			//Primary ray is const to make normals more consistent
 			ColorGroup rayColors;
@@ -230,12 +240,12 @@ void RayJob::Main()
 				Vec3 primaryDirection;
 				camera->GetPrimaryRay(static_cast<float>(xPos), static_cast<float>(yPos), &primaryOrigin, &primaryDirection);
 
-				ray.origin.x = xs::select(firstRay, xs::batch<float> (primaryOrigin.x()), ray.origin.x);
-				ray.origin.y = xs::select(firstRay, xs::batch<float> (primaryOrigin.y()), ray.origin.y);
-				ray.origin.z = xs::select(firstRay, xs::batch<float> (primaryOrigin.z()), ray.origin.z);				
-				ray.direction.x = xs::select(firstRay, xs::batch<float> (primaryDirection.x()), ray.direction.x);
-				ray.direction.y = xs::select(firstRay, xs::batch<float> (primaryDirection.y()), ray.direction.y);
-				ray.direction.z = xs::select(firstRay, xs::batch<float> (primaryDirection.z()), ray.direction.z);
+				ray.origin.x = xs::select(firstRay, xs::batch<float>(primaryOrigin.x()), ray.origin.x);
+				ray.origin.y = xs::select(firstRay, xs::batch<float>(primaryOrigin.y()), ray.origin.y);
+				ray.origin.z = xs::select(firstRay, xs::batch<float>(primaryOrigin.z()), ray.origin.z);
+				ray.direction.x = xs::select(firstRay, xs::batch<float>(primaryDirection.x()), ray.direction.x);
+				ray.direction.y = xs::select(firstRay, xs::batch<float>(primaryDirection.y()), ray.direction.y);
+				ray.direction.z = xs::select(firstRay, xs::batch<float>(primaryDirection.z()), ray.direction.z);
 				rayColors = camera->ShootRay(ray, maxBounces, *scene, &primaryNormal);
 
 			}
@@ -243,7 +253,7 @@ void RayJob::Main()
 			{
 				rayColors = camera->ShootRay(ray, maxBounces, *scene);
 			}
-			
+
 			pixelColor += rayColors;
 		}
 
@@ -262,7 +272,7 @@ void RayJob::Main()
 
 		outColor.setX(pixelColorR * sampleScale);
 		outColor.setY(pixelColorG * sampleScale);
-		outColor.setZ(pixelColorB * sampleScale);		
+		outColor.setZ(pixelColorB * sampleScale);
 		Vec3& outNormal = (*primaryNormals)[pos];
 		outNormal.setX((primaryNormal.x.get(0) + 1) * 0.5f);
 		outNormal.setY((primaryNormal.y.get(0) + 1) * 0.5f);

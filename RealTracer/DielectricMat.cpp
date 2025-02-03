@@ -44,7 +44,7 @@ xs::batch_bool<float> DielectricMat::Scatter(const RayGroup& _rayIn, const HitIn
 
 	Vec3Group rayDir = Normalize(_rayIn.direction);
 	xs::batch<float> cosTheta = xs::min(Dot(-rayDir, _hitInfo.normal), xs::batch<float>(1.f));
-	xs::batch<float> sinTheta = xs::max(xs::batch<float> (0.f),sqrt(1.f - cosTheta * cosTheta));
+	xs::batch<float> sinTheta = xs::max(xs::batch<float>(0.f), sqrt(1.f - cosTheta * cosTheta));
 
 	xs::batch_bool<float> cannotRefract = relativeIOR * sinTheta > xs::batch<float>(1.f);
 

@@ -7,6 +7,7 @@
 #include "LambertianMat.h"
 #include "MetalMat.h"
 #include "DielectricMat.h"
+#include "EmissiveMat.h"
 
 void DemoApp::Init()
 {
@@ -19,14 +20,14 @@ void DemoApp::Init()
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, 0.f, 100.f));
+	//scene.Add(*new Sphere(light, 0.f, 3.f, -4.f, 1.f));
 
 	//Add material
 	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.1f), xs::batch<float>(0.2f), xs::batch<float>(0.5f))));
-	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.9f), xs::batch<float>(0.3f), xs::batch<float>(0.3f))));
-	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.8f), xs::batch<float>(0.8f), xs::batch<float>(0.0f))));
-	mainCam.materials.push_back(new DielectricMat(1.1f));
-	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f), xs::batch<float>(0.6f), xs::batch<float>(0.3f)), 1.f));
-	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.3f));
+	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.4f), xs::batch<float>(0.8f), xs::batch<float>(0.0f))));
+	mainCam.materials.push_back(new DielectricMat(1.5f));
+	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.8f));
+	mainCam.materials.push_back(new EmissiveMat(ColorGroup(xs::batch<float>(50.f))));
 
 
 	mainCam.m_position = Vec3(0, 0.5, 3);
