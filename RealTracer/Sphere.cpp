@@ -60,7 +60,21 @@ xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _ray
 	outNormal.z = (point.z - posZ) / radius;
 	outNormal = Normalize(outNormal);
 	_outHit.SetNormal(_ray, outNormal, validRoot);
+	xs::batch<float> u, v;
+	CalcUV(outNormal, u, v);
+	_outHit.u = xs::select(validRoot, u, _outHit.u);
+	_outHit.v = xs::select(validRoot, v, _outHit.v);
+
 	_outHit.material = xs::select(xs::batch_bool_cast<int>(validRoot), xs::batch<int>(material), _outHit.material);
 	return validRoot;
+}
+
+void Sphere::CalcUV(const Vec3Group& _direction, xs::batch<float>& _outU, xs::batch<float>& _outV) const
+{
+	xs::batch<float> theta = acos(-_direction.y);
+	xs::batch<float> phi = atan2(-_direction.z, _direction.x) + PI;
+
+	_outU = phi / (2 * PI);
+	_outV = theta / PI;
 }
 

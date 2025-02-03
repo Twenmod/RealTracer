@@ -14,6 +14,7 @@ namespace xs = xsimd;
 #include "Math.h"
 #include "Logger.h"
 
+#include "stb_image.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 

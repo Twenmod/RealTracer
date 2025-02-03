@@ -15,6 +15,7 @@ public:
 	float posZ;
 	float radius;
 private:
+	void CalcUV(const Vec3Group& direction, xs::batch<float>& outU, xs::batch<float>& outV) const;
 	E_MATERIALS material;
 };
 

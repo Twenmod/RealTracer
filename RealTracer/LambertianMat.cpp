@@ -3,10 +3,11 @@
 #include "LambertianMat.h"
 #include "Ray.h"
 #include "Hittable.h"
+#include "Texture.h"
 
-LambertianMat::LambertianMat(const ColorGroup& _albedo)
+LambertianMat::LambertianMat(const Texture& _texture) :
+	m_texture(_texture)
 {
-	m_albedo = _albedo;
 }
 
 xs::batch_bool<float> LambertianMat::Scatter(const RayGroup&, const HitInfoGroup& _hitInfo, ColorGroup& _attentuationOut, RayGroup& _rayOut) const
@@ -15,6 +16,6 @@ xs::batch_bool<float> LambertianMat::Scatter(const RayGroup&, const HitInfoGroup
 	Vec3Group scatterDirection = _hitInfo.normal + RandomUnitVector();
 
 	_rayOut = RayGroup(_hitInfo.point, scatterDirection);
-	_attentuationOut = m_albedo;
+	_attentuationOut = m_texture.Sample(_hitInfo.u,_hitInfo.v,_hitInfo.point);
 	return xs::batch_bool<float>(true);
 }

@@ -154,6 +154,7 @@ ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, co
 	xs::batch<float> a = xs::batch<float>(0.5f) * direction.y + 1.0f;
 	ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(0.2f), xs::batch<float>(0.2f), xs::batch<float>(0.4f)), ColorGroup(xs::batch<float>(0.5f), xs::batch<float>(0.1f), xs::batch<float>(0.1f)), 1.f - a);
 	//ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(0.0f), xs::batch<float>(0.f), xs::batch<float>(0.f)), ColorGroup(xs::batch<float>(0.f), xs::batch<float>(0.f), xs::batch<float>(0.f)), 1.f - a);
+	//ColorGroup backgroundColor = Lerp(ColorGroup(1.f), ColorGroup(1.f), 1.f - a);
 
 	//No bounces
 	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.x);

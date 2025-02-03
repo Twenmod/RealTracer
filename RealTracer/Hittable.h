@@ -12,8 +12,8 @@ public:
 	Vec3Group normal;
 	xs::batch<float> t;
 	xs::batch_bool<float> frontFace;
-	xs::batch_bool<float> u;
-	xs::batch_bool<float> v;
+	xs::batch<float> u;
+	xs::batch<float> v;
 	xs::batch<int> material;
 
 	void SetNormal(const RayGroup& _ray, Vec3Group _normal, xs::batch_bool<float> mask)

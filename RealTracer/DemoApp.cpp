@@ -9,6 +9,8 @@
 #include "DielectricMat.h"
 #include "EmissiveMat.h"
 
+#include "Texture.h"
+
 void DemoApp::Init()
 {
 
@@ -22,9 +24,13 @@ void DemoApp::Init()
 	scene.Add(*new Sphere(grass, 0.f, -100.5f, 0.f, 100.f));
 	//scene.Add(*new Sphere(light, 0.f, 3.f, -4.f, 1.f));
 
+	Texture* checkerTexture = new CheckerTexture3D(1.f, ColorGroup(0.f), ColorGroup(1.f, 0, 1.f));
+	Texture* imageTexture = new ImageTexture("./assets/texture.jpg");
+
+
 	//Add material
-	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.1f), xs::batch<float>(0.2f), xs::batch<float>(0.5f))));
-	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.4f), xs::batch<float>(0.8f), xs::batch<float>(0.0f))));
+	mainCam.materials.push_back(new LambertianMat(*imageTexture));
+	mainCam.materials.push_back(new LambertianMat(*checkerTexture));
 	mainCam.materials.push_back(new DielectricMat(1.5f));
 	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.8f));
 	mainCam.materials.push_back(new EmissiveMat(ColorGroup(xs::batch<float>(50.f))));
@@ -103,7 +109,7 @@ void DemoApp::Render()
 	if (ImGui::TreeNode("Settings"))
 	{
 		ImGui::Checkbox("Animate", &m_settings.animate);
-		ImGui::SliderInt("Samples", &m_settings.samples, 1, 64, (std::to_string(m_settings.samples * SIMD_SIZE).c_str()));
+		ImGui::SliderInt("Samples", &m_settings.samples, 1, 128, (std::to_string(m_settings.samples * SIMD_SIZE).c_str()));
 		ImGui::Checkbox("Accumulator", &m_settings.accumulatorOn);
 		if (m_settings.accumulatorOn)
 		{
