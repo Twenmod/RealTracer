@@ -145,14 +145,20 @@ ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, co
 	xs::batch<float> a = xs::batch<float>(0.5f) * direction.y + 1.0f;
 	ColorGroup backgroundColor = Lerp(ColorGroup(xs::batch<float>(1.f)), ColorGroup(xs::batch<float>(0.5f), xs::batch<float>(0.7f), xs::batch<float>(1.0f)), a);
 
-	attentuation.x = xs::select(intersections, attentuation.x, backgroundColor.x);
-	attentuation.y = xs::select(intersections, attentuation.y, backgroundColor.y);
-	attentuation.z = xs::select(intersections, attentuation.z, backgroundColor.z);
-
 	//No bounces
 	attentuation.x = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.x);
 	attentuation.y = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.y);
 	attentuation.z = xs::select(xs::batch_bool_cast<float>(noBounces), xs::batch<float>(0.f), attentuation.z);
+
+	////Frontface debug
+	//attentuation.x = xs::select(hit.frontFace , xs::batch<float>(0.f), xs::batch<float>(1.f));
+	//attentuation.y = xs::batch<float> (0.f);
+	//attentuation.z = xs::select(hit.frontFace, xs::batch<float>(1.f), xs::batch<float>(0.f));
+
+	attentuation.x = xs::select(intersections, attentuation.x, backgroundColor.x);
+	attentuation.y = xs::select(intersections, attentuation.y, backgroundColor.y);
+	attentuation.z = xs::select(intersections, attentuation.z, backgroundColor.z);
+
 
 	//If first bounce return primary normal
 	xs::batch_bool<int> firstHit = _maxBounces == xs::batch<int>(MAX_BOUNCES);

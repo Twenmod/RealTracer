@@ -16,7 +16,7 @@ constexpr int IMAGE_HEIGHT = 768u/4u;
 //Actual samples is this times your available simd size (1, 4, 8, 16)
 constexpr int SAMPLES_PER_PIXEL = 1;
 
-constexpr int MAX_BOUNCES = 4;
+constexpr int MAX_BOUNCES = 7;
 constexpr float MIN_INTERSECTION_DEPTH = 0.0001f;
 
 

@@ -13,12 +13,12 @@ void DemoApp::Init()
 
 	//Add objects to scene
 	//scene.Add(*new Sphere(red, 1.f, 0.f, -1.f, 0.5f));
-	scene.Add(*new Sphere(diffuse, 0.f, 0.f, -1.2f, 0.5f));
-	scene.Add(*new Sphere(metal, 1.f, 0.0f, -1.f, 0.5f));
-	scene.Add(*new Sphere(mirror, -1.f, 0.f, -1.f, 0.5f));
+	scene.Add(*new Sphere(diffuse, 0.f, 0.f, -0.2f, 0.5f));
+	scene.Add(*new Sphere(metal, 1.f, 0.0f, -0.f, 0.5f));
+	scene.Add(*new Sphere(glass, -1.f, 0.f, -0.f, 0.5f));
 	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
 	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
-	scene.Add(*new Sphere(grass, 0.f, -100.5f, -1.f, 100.f));
+	scene.Add(*new Sphere(grass, 0.f, -100.5f, 0.f, 100.f));
 
 	//Add material
 	mainCam.materials.push_back(new LambertianMat(ColorGroup(xs::batch<float>(0.1f), xs::batch<float>(0.2f), xs::batch<float>(0.5f))));
@@ -28,6 +28,8 @@ void DemoApp::Init()
 	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f), xs::batch<float>(0.6f), xs::batch<float>(0.3f)), 1.f));
 	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.3f));
 
+
+	mainCam.m_position = Vec3(0, 0.5, 3);
 
 	mainCam.m_verticalFOV = 40;
 	mainCam.m_defocusAngle = 0.0f;
@@ -46,9 +48,14 @@ void DemoApp::Tick(float _deltaTime)
 	//dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
 	//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
-	mainCam.m_position = Vec3(sin(timer * 0.5f) * 5.f, 2.f, cos(timer * 0.5f) * 5.f);
+	if (glfwGetKey(&m_window, GLFW_KEY_W)) mainCam.m_position += Vec3(1, 0, 0)*_deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_S)) mainCam.m_position += Vec3(-1, 0, 0) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_D)) mainCam.m_position += Vec3(0, 0, 1) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_A)) mainCam.m_position += Vec3(0, 0, -1) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_C)) mainCam.m_position += Vec3(0, -1, 0) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_SPACE)) mainCam.m_position += Vec3(0, 1, 0) * _deltaTime;
 	//mainCam.m_position = Vec3(0, .5f, 1);
-	mainCam.m_direction = Normalize(Vec3(0, 0, -1) - mainCam.m_position);
+	mainCam.m_direction = Normalize(Vec3(0, 0, 0) - mainCam.m_position);
 
 }
 

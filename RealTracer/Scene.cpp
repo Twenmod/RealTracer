@@ -29,7 +29,7 @@ xs::batch_bool<float> Scene::Intersect(const RayGroup& ray, IntervalGroup _rayT,
 		outHit.normal.x = xs::select(intersections, hits.normal.x, outHit.normal.x);
 		outHit.normal.y = xs::select(intersections, hits.normal.y, outHit.normal.y);
 		outHit.normal.z = xs::select(intersections, hits.normal.z, outHit.normal.z);
-		outHit.frontFace = intersections & hits.frontFace;
+		outHit.frontFace = (intersections & hits.frontFace) | (~intersections & outHit.frontFace);
 		outHit.t = xs::select(intersections, hits.t, outHit.t);
 		outHit.material = xs::select(xs::batch_bool_cast<int>(intersections), hits.material, outHit.material);
 

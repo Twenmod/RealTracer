@@ -28,7 +28,7 @@ xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _ray
 	//All miss
 	if (xs::all(noIntersection))
 	{
-		return !noIntersection;
+		return !noIntersection; // return false for all
 	}
 
 	xs::batch<float> sqrtd = xs::sqrt(discriminant);
@@ -45,19 +45,22 @@ xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _ray
 
 	if (xs::all(!validRoot))
 	{
-		return validRoot;
+		return validRoot; // return false for all
 	}
 
 	_outHit.t = root;
 	
 	Vec3Group point = _ray.At(root);
-	_outHit.point = point;
+	_outHit.point.x = xs::select(validRoot, point.x, _outHit.point.x);
+	_outHit.point.y = xs::select(validRoot, point.y, _outHit.point.y);
+	_outHit.point.z = xs::select(validRoot, point.z, _outHit.point.z);
 	Vec3Group outNormal;
 	outNormal.x = (point.x - posX) / radius;
 	outNormal.y = (point.y - posY) / radius;
 	outNormal.z = (point.z - posZ) / radius;
-	_outHit.SetNormal(_ray, outNormal);
-	_outHit.material = material;
+	outNormal = Normalize(outNormal);
+	_outHit.SetNormal(_ray, outNormal, validRoot);
+	_outHit.material = xs::select(xs::batch_bool_cast<int>(validRoot), xs::batch<int>(material), _outHit.material);
 	return validRoot;
 }
 

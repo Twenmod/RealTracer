@@ -14,12 +14,15 @@ public:
 	xs::batch_bool<float> frontFace;
 	xs::batch<int> material;
 
-	void SetNormal(const RayGroup& _ray, Vec3Group _normal)
+	void SetNormal(const RayGroup& _ray, Vec3Group _normal, xs::batch_bool<float> mask)
 	{
-		frontFace = Dot(_ray.direction, _normal) < 0.f;
-		normal.x = xs::select(frontFace, _normal.x, -_normal.x);
-		normal.y = xs::select(frontFace, _normal.y, -_normal.y);
-		normal.z = xs::select(frontFace, _normal.z, -_normal.z);
+		Vec3Group rayDir = Normalize(_ray.direction);
+		xs::batch_bool<float> newFrontFace = Dot(rayDir, _normal) < 0.f;
+		frontFace = (newFrontFace & mask) | (frontFace & ~mask);// basically select
+
+		normal.x = xs::select(mask, xs::select(frontFace, _normal.x, -_normal.x), normal.x);
+		normal.y = xs::select(mask, xs::select(frontFace, _normal.y, -_normal.y), normal.y);
+		normal.z = xs::select(mask, xs::select(frontFace, _normal.z, -_normal.z), normal.z);
 	}
 
 };
