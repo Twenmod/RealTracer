@@ -132,7 +132,6 @@ void DemoApp::Render()
 			{
 				m_settings.smoothingFactor = 1.f - invSmooth;
 			}
-			ImGui::SliderFloat("  Update margin", &m_settings.updateTimer, 0, 0.4f, "%.3f");
 		}
 		ImGui::Checkbox("Denoise", &m_settings.denoise);
 		ImGui::TreePop();

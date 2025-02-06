@@ -13,9 +13,8 @@ struct EngineSettings
 	bool showPositions = false;
 	bool showChange = false;
 	int samples = SAMPLES_PER_PIXEL;
-	float overrideTreshold = 0.02f;
-	float smoothingFactor = 0.12f;
-	float updateTimer = 0.07f;
+	float overrideTreshold = 0.4f;
+	float smoothingFactor = 0.10f;
 };
 
 class App
