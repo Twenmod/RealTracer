@@ -1,20 +1,25 @@
 #pragma once
 #include "App.h"
-#include "Camera.h"
 #include "Scene.h"
+
+class Camera;
 
 class DemoApp :
 	public App
 {
 public:
-	DemoApp(GLFWwindow& window, EngineSettings& settings) : App(window, settings) { m_deltaTime = 0; }
+	DemoApp(GLFWwindow& window, EngineSettings& settings);
 	void Init() override;
 	void Tick(float deltaTime) override;
 	void FastTick(float deltaTime) override;
-	void Trace(std::vector<Vec3>& colorOut, std::vector<Vec3>& normalOut) override;
+	void Trace(std::vector<Vec3>& colorOut, std::vector<Vec3>& normalOut, std::vector<Vec3>& posOut) override;
 	void Render() override;
+	const Camera& GetCamera() const override
+	{
+		return *mainCam;
+	}
 private:
-	Camera mainCam;
+	Camera* mainCam;
 	Scene scene;
 
 	int frameRateSize{ 30 };

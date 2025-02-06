@@ -9,6 +9,8 @@
 #include "DielectricMat.h"
 #include "EmissiveMat.h"
 
+#include "Camera.h"
+
 #include "Texture.h"
 
 void DemoApp::Init()
@@ -29,18 +31,23 @@ void DemoApp::Init()
 
 
 	//Add material
-	mainCam.materials.push_back(new LambertianMat(*imageTexture));
-	mainCam.materials.push_back(new LambertianMat(*checkerTexture));
-	mainCam.materials.push_back(new DielectricMat(1.5f));
-	mainCam.materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.8f));
-	mainCam.materials.push_back(new EmissiveMat(ColorGroup(xs::batch<float>(50.f))));
+	mainCam->materials.push_back(new LambertianMat(*imageTexture));
+	mainCam->materials.push_back(new LambertianMat(*checkerTexture));
+	mainCam->materials.push_back(new DielectricMat(1.5f));
+	mainCam->materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.8f));
+	mainCam->materials.push_back(new EmissiveMat(ColorGroup(xs::batch<float>(50.f))));
 
 
-	mainCam.m_position = Vec3(0, 0.5, 3);
+	mainCam->m_position = Vec3(0, 0.5, 3);
 
-	mainCam.m_verticalFOV = 40;
-	mainCam.m_defocusAngle = 0.0f;
-	mainCam.m_focusDistance = 10.0f;
+	mainCam->m_verticalFOV = 40;
+	mainCam->m_defocusAngle = 0.0f;
+	mainCam->m_focusDistance = 10.0f;
+}
+
+DemoApp::DemoApp(GLFWwindow& window, EngineSettings& settings) : App(window, settings), mainCam(new Camera())
+{
+	m_deltaTime = 0;
 }
 
 void DemoApp::Tick(float _deltaTime)
@@ -55,14 +62,14 @@ void DemoApp::Tick(float _deltaTime)
 	//dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
 	//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
-	if (glfwGetKey(&m_window, GLFW_KEY_W)) mainCam.m_position += Vec3(1, 0, 0)*_deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_S)) mainCam.m_position += Vec3(-1, 0, 0) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_D)) mainCam.m_position += Vec3(0, 0, 1) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_A)) mainCam.m_position += Vec3(0, 0, -1) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_C)) mainCam.m_position += Vec3(0, -1, 0) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_SPACE)) mainCam.m_position += Vec3(0, 1, 0) * _deltaTime;
-	//mainCam.m_position = Vec3(0, .5f, 1);
-	mainCam.m_direction = Normalize(Vec3(0, 0, 0) - mainCam.m_position);
+	if (glfwGetKey(&m_window, GLFW_KEY_W)) mainCam->m_position += Vec3(1, 0, 0)*_deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_S)) mainCam->m_position += Vec3(-1, 0, 0) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_D)) mainCam->m_position += Vec3(0, 0, 1) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_A)) mainCam->m_position += Vec3(0, 0, -1) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_C)) mainCam->m_position += Vec3(0, -1, 0) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_SPACE)) mainCam->m_position += Vec3(0, 1, 0) * _deltaTime;
+	//mainCam->m_position = Vec3(0, .5f, 1);
+	//mainCam->m_direction = Normalize(Vec3(0, 0, 0) - mainCam->m_position);
 
 }
 
@@ -72,11 +79,9 @@ void DemoApp::FastTick(float _deltaTime)
 
 }
 
-void DemoApp::Trace(std::vector<Vec3>& _colorOut, std::vector<Vec3>& _normalOut)
+void DemoApp::Trace(std::vector<Vec3>& _colorOut, std::vector<Vec3>& _normalOut, std::vector<Vec3>& _posOut)
 {
-
-
-	_colorOut = mainCam.Render(scene, m_settings.samples, &_normalOut);
+	_colorOut = mainCam->Render(scene, m_settings.samples, &_normalOut, &_posOut);
 }
 
 void DemoApp::Render()
@@ -113,10 +118,10 @@ void DemoApp::Render()
 		ImGui::Checkbox("Accumulator", &m_settings.accumulatorOn);
 		if (m_settings.accumulatorOn)
 		{
-			float baseTreshold = m_settings.overrideTreshold / 0xff;
+			float baseTreshold = m_settings.overrideTreshold;
 			if (ImGui::SliderFloat("  Treshold", &baseTreshold, 0.0001f, 1.0f, "%.4f"))
 			{
-				m_settings.overrideTreshold = baseTreshold * 0xff;
+				m_settings.overrideTreshold = baseTreshold;
 			}
 			float invSmooth = 1.f - m_settings.smoothingFactor;
 			if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 0.9999f, "%.4f"))
@@ -130,7 +135,14 @@ void DemoApp::Render()
 	}
 	if (ImGui::TreeNode("Debug"))
 	{
-		ImGui::Checkbox("Show Normals", &m_settings.showNormals);
+		if (ImGui::Checkbox("Show Normals", &m_settings.showNormals))
+		{
+			m_settings.showPositions = false;
+		}
+		if (ImGui::Checkbox("Show Positions", &m_settings.showPositions))
+		{
+			m_settings.showNormals = false;
+		}
 		if (m_settings.accumulatorOn)
 		{
 			ImGui::Text("Accumulator");

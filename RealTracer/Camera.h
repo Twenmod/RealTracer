@@ -1,4 +1,3 @@
-#pragma once
 
 
 #include "Jobmanager.h"
@@ -19,6 +18,7 @@ public:
 	uint maxBounces{0};
 	std::vector<Vec3>* pixels{nullptr};
 	std::vector<Vec3>* primaryNormals{nullptr};
+	std::vector<Vec3>* primaryPositions{nullptr};
 	const Hittable* scene{nullptr};
 	int pixelAmount{0};
 	int samples{0};
@@ -30,7 +30,7 @@ class Camera
 public:
 	Camera(Vec3 position = Vec3(0.f));
 
-	std::vector<Vec3> Render(const Hittable& scene, int sample, std::vector<Vec3>* outNormal = nullptr);
+	std::vector<Vec3> Render(const Hittable& scene, int sample, std::vector<Vec3>* outNormal = nullptr, std::vector<Vec3>* outPositions = nullptr);
 
 	float m_defocusAngle = 3;
 	float m_focusDistance = 1;
@@ -38,10 +38,18 @@ public:
 	Vec3 m_direction{ Vec3(0.f,0.f,-1.f)};
 	Vec3 m_up{ Vec3(0.f,1.f,0.f) };
 	float m_verticalFOV{ 90 };
-	ColorGroup ShootRay(const RayGroup& ray, xs::batch<int> maxBounces, const Hittable& scene, ColorGroup* primaryNormalOut = nullptr) const;
+	ColorGroup ShootRay(const RayGroup& ray, xs::batch<int> maxBounces, const Hittable& scene, ColorGroup* primaryNormalOut = nullptr, Point3Group* _posOut = nullptr) const;
 	RayGroup GetRay(xs::batch<float> pixelX, xs::batch<float> pixelY) const;
 	void GetPrimaryRay(float pixelX, float pixelY, Vec3* origin, Vec3* direction) const;
 	std::vector<Material*> materials;
+	void GetProjections(glm::mat4& view, glm::mat4& projection) const
+	{
+		glm::vec3 pos = glm::vec3(m_position.x(), m_position.y(), m_position.z());
+		view = glm::lookAtRH(pos, pos + glm::vec3(m_direction.x(), m_direction.y(), m_direction.z()), glm::vec3(m_up.x(),m_up.y(),m_up.z()));
+		Vec3 pixelCenter = pixel00 + 0.5f * (pixelDeltaU * IMAGE_WIDTH + pixelDeltaV * IMAGE_HEIGHT);
+		float nearPlane = (pixelCenter - m_position).Length();
+		projection = glm::perspective(glm::radians(m_verticalFOV), ASPECT_RATIO, nearPlane, 1.f);
+	}
 private:
 
 	void Initialize();
@@ -68,4 +76,3 @@ private:
 	Vec3 defocusDiskV;
 
 };
-

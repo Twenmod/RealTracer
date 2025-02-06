@@ -14,7 +14,7 @@ Camera::Camera(Vec3 _position)
 	m_position = _position;
 }
 
-std::vector<Vec3> Camera::Render(const Hittable& scene, int samples, std::vector<Vec3>* outNormal)
+std::vector<Vec3> Camera::Render(const Hittable& scene, int samples, std::vector<Vec3>* outNormal, std::vector<Vec3>* outPositions)
 {
 	Initialize();
 
@@ -45,6 +45,7 @@ std::vector<Vec3> Camera::Render(const Hittable& scene, int samples, std::vector
 		job->samples = samples;
 		job->pixels = &pixels;
 		job->primaryNormals = outNormal;
+		job->primaryPositions = outPositions;
 
 #ifdef MULTITHREAD
 		jobManager->AddJob2(job);
@@ -95,7 +96,7 @@ void Camera::GetPrimaryRay(float _pixelX, float _pixelY, Vec3* _origin, Vec3* _d
 	_direction->setZ(sample.z() - m_position.z());
 }
 
-ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const Hittable& _scene, ColorGroup* _primaryNormalOut) const
+ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, const Hittable& _scene, ColorGroup* _primaryNormalOut, Point3Group* _posOut) const
 {
 	xs::batch_bool<int> noBounces = _maxBounces <= 0;
 	if (xs::all(noBounces))
@@ -173,11 +174,14 @@ ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, co
 
 	//If first bounce return primary normal
 	xs::batch_bool<int> firstHit = _maxBounces == xs::batch<int>(MAX_BOUNCES);
-	if (xs::all(firstHit) && _primaryNormalOut != nullptr)
+	if (xs::all(firstHit) && _primaryNormalOut != nullptr && _posOut != nullptr)
 	{
 		_primaryNormalOut->x = xs::select(intersections, hit.normal.x, xs::batch<float>(0.f));
 		_primaryNormalOut->y = xs::select(intersections, hit.normal.y, xs::batch<float>(0.f));
-		_primaryNormalOut->z = xs::select(intersections, hit.normal.z, xs::batch<float>(0.f));
+		_primaryNormalOut->z = xs::select(intersections, hit.normal.z, xs::batch<float>(0.f));		
+		_posOut->x = xs::select(intersections, hit.point.x, xs::batch<float>(0.f));
+		_posOut->y = xs::select(intersections, hit.point.y, xs::batch<float>(0.f));
+		_posOut->z = xs::select(intersections, hit.point.z, xs::batch<float>(0.f));
 	}
 	return attentuation;
 
@@ -219,6 +223,7 @@ void RayJob::Main()
 
 		ColorGroup pixelColor(0);
 		ColorGroup primaryNormal;
+		Point3Group primaryPos;
 		for (size_t sample = 0; sample < samples; sample++)
 		{
 			RayGroup ray = camera->GetRay(xs::batch<float>(static_cast<float>(xPos)), xs::batch<float>(static_cast<float>(yPos)));
@@ -247,7 +252,7 @@ void RayJob::Main()
 				ray.direction.x = xs::select(firstRay, xs::batch<float>(primaryDirection.x()), ray.direction.x);
 				ray.direction.y = xs::select(firstRay, xs::batch<float>(primaryDirection.y()), ray.direction.y);
 				ray.direction.z = xs::select(firstRay, xs::batch<float>(primaryDirection.z()), ray.direction.z);
-				rayColors = camera->ShootRay(ray, maxBounces, *scene, &primaryNormal);
+				rayColors = camera->ShootRay(ray, maxBounces, *scene, &primaryNormal, &primaryPos);
 
 			}
 			else
@@ -278,5 +283,9 @@ void RayJob::Main()
 		outNormal.setX((primaryNormal.x.get(0) + 1) * 0.5f);
 		outNormal.setY((primaryNormal.y.get(0) + 1) * 0.5f);
 		outNormal.setZ((primaryNormal.z.get(0) + 1) * 0.5f);
+		Vec3& outPos = (*primaryPositions)[pos];
+		outPos.setX((primaryPos.x.get(0)));
+		outPos.setY((primaryPos.y.get(0)));
+		outPos.setZ((primaryPos.z.get(0)));
 	}
 }
