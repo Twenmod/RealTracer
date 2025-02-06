@@ -271,54 +271,81 @@ void Accumulate(float deltaTime, std::vector<Vec3>& frame, std::vector<Vec3>& fr
 		bool isReprojected = false;
 
 		// no reprojection if out of bounds
-		if (reprojected.x >= 0 && reprojected.x < IMAGE_WIDTH &&
-			reprojected.y >= 0 && reprojected.y < IMAGE_HEIGHT)
+		if (settings.accumulatorOn && !settings.showNormals && !settings.showPositions)
 		{
-			if (!(currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f))
+			if (reprojected.x >= 0 && reprojected.x < IMAGE_WIDTH &&
+				reprojected.y >= 0 && reprojected.y < IMAGE_HEIGHT)
 			{
-				int currY = floor(i / IMAGE_WIDTH);
-				int currX = i - (currY * IMAGE_WIDTH);
-
-				//Get prev pixel here
-				int prevX = static_cast<int>(floor(reprojected.x));
-				int prevY = static_cast<int>(floor(reprojected.y));
-				prevX = std::max(std::min(prevX, IMAGE_WIDTH - 1), 0);
-				prevY = std::max(std::min(prevY, IMAGE_HEIGHT - 1), 0);
-
-
-				int prevI = prevX + prevY * IMAGE_WIDTH;
-				Vec3 prevPos = framePosData[prevI];
-				Vec3 prevNormal;
-				prevNormal.setX(frameNormalData[prevI * 3 + 0] / 0xff);
-				prevNormal.setY(frameNormalData[prevI * 3 + 1] / 0xff);
-				prevNormal.setZ(frameNormalData[prevI * 3 + 2] / 0xff);
-
-				// Check if the previous pixel's position and normal match the current pixel
-				float positionDiff = (currentPos - prevPos).Length();
-				float normalDiff = dot(currentNormal, prevNormal);
-
-				if (positionDiff < settings.overrideTreshold && normalDiff < settings.overrideTreshold)
+				if (!(currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f))
 				{
-					float newR = frame[i].x() * 0xff;
-					float newG = frame[i].y() * 0xff;
-					float newB = frame[i].z() * 0xff;
+					int currY = floor(i / IMAGE_WIDTH);
+					int currX = i - (currY * IMAGE_WIDTH);
 
-					//Use previous frame
-					frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 0] * (1.f - settings.smoothingFactor) + newR * settings.smoothingFactor);  // R			
-					frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 1] * (1.f - settings.smoothingFactor) + newG * settings.smoothingFactor);  // G
-					frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 2] * (1.f - settings.smoothingFactor) + newB * settings.smoothingFactor);  // B
-					//frameTextureData[i * 3 + 0] = static_cast<unsigned char>(0);  // r
-					//frameTextureData[i * 3 + 1] = static_cast<unsigned char>(0xff);  // G
-					//frameTextureData[i * 3 + 2] = static_cast<unsigned char>(0);  // b
-					isReprojected = true;
+					//Get prev pixel here
+					int prevX = static_cast<int>(floor(reprojected.x));
+					int prevY = static_cast<int>(floor(reprojected.y));
+					prevX = std::max(std::min(prevX, IMAGE_WIDTH - 1), 0);
+					prevY = std::max(std::min(prevY, IMAGE_HEIGHT - 1), 0);
+
+
+					int prevI = prevX + prevY * IMAGE_WIDTH;
+					Vec3 prevPos = framePosData[prevI];
+					Vec3 prevNormal;
+					prevNormal.setX(frameNormalData[prevI * 3 + 0] / 0xff);
+					prevNormal.setY(frameNormalData[prevI * 3 + 1] / 0xff);
+					prevNormal.setZ(frameNormalData[prevI * 3 + 2] / 0xff);
+
+					// Check if the previous pixel's position and normal match the current pixel
+					float positionDiff = (currentPos - prevPos).Length();
+					float normalDiff = dot(currentNormal, prevNormal);
+
+					if (positionDiff < settings.overrideTreshold && normalDiff < settings.overrideTreshold)
+					{
+						float newR;
+						float newG;
+						float newB;
+
+						newR = frame[i].x() * 0xff;
+						newG = frame[i].y() * 0xff;
+						newB = frame[i].z() * 0xff;
+
+						//Use previous frame
+						frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 0] * (1.f - settings.smoothingFactor) + newR * settings.smoothingFactor);  // R			
+						frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 1] * (1.f - settings.smoothingFactor) + newG * settings.smoothingFactor);  // G
+						frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 2] * (1.f - settings.smoothingFactor) + newB * settings.smoothingFactor);  // B
+						//frameTextureData[i * 3 + 0] = static_cast<unsigned char>(0);  // r
+						//frameTextureData[i * 3 + 1] = static_cast<unsigned char>(0xff);  // G
+						//frameTextureData[i * 3 + 2] = static_cast<unsigned char>(0);  // b
+						isReprojected = true;
+					}
 				}
 			}
 		}
 		if (!isReprojected)
 		{
-			frameColorDataBuffer[i * 3 + 0] = frame[i].x() * 0xff;  // r
-			frameColorDataBuffer[i * 3 + 1] = frame[i].y() * 0xff;  // G
-			frameColorDataBuffer[i * 3 + 2] = frame[i].z() * 0xff;  // b
+			if (settings.showNormals)
+			{
+				frameColorDataBuffer[i * 3 + 0] = frameNormalData[i * 3 + 0];
+				frameColorDataBuffer[i * 3 + 1] = frameNormalData[i * 3 + 1];
+				frameColorDataBuffer[i * 3 + 2] = frameNormalData[i * 3 + 2];
+			}
+			else if (settings.showPositions)
+			{
+				frameColorDataBuffer[i * 3 + 0] = framePos[i].x() * 0xff;
+				frameColorDataBuffer[i * 3 + 1] = framePos[i].y() * 0xff;
+				frameColorDataBuffer[i * 3 + 2] = framePos[i].z() * 0xff;
+			}else if (settings.showChange)
+			{
+				frameColorDataBuffer[i * 3 + 0] = 0xff;  // r
+				frameColorDataBuffer[i * 3 + 1] = 0x00;  // G
+				frameColorDataBuffer[i * 3 + 2] = 0x00;  // b
+			}
+			else
+			{
+				frameColorDataBuffer[i * 3 + 0] = frame[i].x() * 0xff;  // r
+				frameColorDataBuffer[i * 3 + 1] = frame[i].y() * 0xff;  // G
+				frameColorDataBuffer[i * 3 + 2] = frame[i].z() * 0xff;  // b
+			}
 		}
 
 		frameNormalDataBuffer[i * 3 + 0] = currentNormal.x() * 0xff;
@@ -332,8 +359,8 @@ void Accumulate(float deltaTime, std::vector<Vec3>& frame, std::vector<Vec3>& fr
 	{
 		frameTextureData[i * 3 + 0] = frameColorDataBuffer[i * 3 + 0];
 		frameTextureData[i * 3 + 1] = frameColorDataBuffer[i * 3 + 1];
-		frameTextureData[i * 3 + 2] = frameColorDataBuffer[i * 3 + 2];		
-		
+		frameTextureData[i * 3 + 2] = frameColorDataBuffer[i * 3 + 2];
+
 		frameNormalData[i * 3 + 0] = frameNormalDataBuffer[i * 3 + 0];
 		frameNormalData[i * 3 + 1] = frameNormalDataBuffer[i * 3 + 1];
 		frameNormalData[i * 3 + 2] = frameNormalDataBuffer[i * 3 + 2];

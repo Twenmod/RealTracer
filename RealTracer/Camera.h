@@ -47,8 +47,8 @@ public:
 		glm::vec3 pos = glm::vec3(m_position.x(), m_position.y(), m_position.z());
 		view = glm::lookAtRH(pos, pos + glm::vec3(m_direction.x(), m_direction.y(), m_direction.z()), glm::vec3(m_up.x(),m_up.y(),m_up.z()));
 		Vec3 pixelCenter = pixel00 + 0.5f * (pixelDeltaU * IMAGE_WIDTH + pixelDeltaV * IMAGE_HEIGHT);
-		float nearPlane = (pixelCenter - m_position).Length();
-		projection = glm::perspective(glm::radians(m_verticalFOV), ASPECT_RATIO, nearPlane, 1.f);
+		float nearPlane = 1.0f / (2.0f * tan(glm::radians(m_verticalFOV) / 2.0f)); // Distance to image plane		
+		projection = glm::perspective(glm::radians(m_verticalFOV), ASPECT_RATIO, nearPlane, 1000.f);
 	}
 private:
 

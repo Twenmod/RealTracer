@@ -69,7 +69,7 @@ void DemoApp::Tick(float _deltaTime)
 	if (glfwGetKey(&m_window, GLFW_KEY_C)) mainCam->m_position += Vec3(0, -1, 0) * _deltaTime;
 	if (glfwGetKey(&m_window, GLFW_KEY_SPACE)) mainCam->m_position += Vec3(0, 1, 0) * _deltaTime;
 	//mainCam->m_position = Vec3(0, .5f, 1);
-	//mainCam->m_direction = Normalize(Vec3(0, 0, 0) - mainCam->m_position);
+	mainCam->m_direction = Normalize(Vec3(0, 0, 0) - mainCam->m_position);
 
 }
 
@@ -115,7 +115,7 @@ void DemoApp::Render()
 	{
 		ImGui::Checkbox("Animate", &m_settings.animate);
 		ImGui::SliderInt("Samples", &m_settings.samples, 1, 128, (std::to_string(m_settings.samples * SIMD_SIZE).c_str()));
-		ImGui::Checkbox("Accumulator", &m_settings.accumulatorOn);
+		ImGui::Checkbox("Accumulate&Reproject", &m_settings.accumulatorOn);
 		if (m_settings.accumulatorOn)
 		{
 			float baseTreshold = m_settings.overrideTreshold;
@@ -138,10 +138,12 @@ void DemoApp::Render()
 		if (ImGui::Checkbox("Show Normals", &m_settings.showNormals))
 		{
 			m_settings.showPositions = false;
+			m_settings.accumulatorOn = false;
 		}
 		if (ImGui::Checkbox("Show Positions", &m_settings.showPositions))
 		{
 			m_settings.showNormals = false;
+			m_settings.accumulatorOn = false;
 		}
 		if (m_settings.accumulatorOn)
 		{
