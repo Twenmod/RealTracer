@@ -344,6 +344,7 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MetalMat.cpp" />
+    <ClCompile Include="Quad.cpp" />
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="RealTracer.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -384,6 +385,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="MetalMat.h" />
     <ClInclude Include="precomp.h" />
+    <ClInclude Include="Quad.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />

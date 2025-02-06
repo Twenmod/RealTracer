@@ -21,6 +21,10 @@ public:
 	void setY(float y) { values[1] = y; }
 	void setZ(float z) { values[2] = z; }
 
+	Vec3Group Group() const {
+		return Vec3Group(xs::batch<float>(x()), xs::batch<float>(y()), xs::batch<float>(z()));
+	}
+
 	Vec3 operator-() const { return Vec3(-values[0], -values[1], -values[2]); }
 	float operator[](int i) const { return values[i]; }
 	float& operator[](int i) { return values[i]; }

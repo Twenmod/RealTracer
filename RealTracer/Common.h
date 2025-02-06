@@ -28,11 +28,11 @@ constexpr float MAX_INTERSECTION_DEPTH = 10000.f;
 //Materials
 enum E_MATERIALS
 {
-	diffuse,
-	grass,
-	glass,
+	white,
+	red,
+	blue,
 	metal,
-	light,
+	light
 };
 
 

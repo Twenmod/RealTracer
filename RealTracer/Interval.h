@@ -32,8 +32,8 @@ public:
 	}
 
 	xs::batch<float> Size() const { return max - min; }
-	xs::batch_bool<float> Contains(xs::batch<float> x) const { return min <= x && x <= max; }
-	xs::batch_bool<float> Surrounds(xs::batch<float> x) const { return min < x && x < max; }
+	xs::batch_bool<float> Contains(xs::batch<float> x) const { return min <= x & x <= max; }
+	xs::batch_bool<float> Surrounds(xs::batch<float> x) const { return min < x & x < max; }
 	//Grows a interval uniformly
 	IntervalGroup Expanded(xs::batch<float> deltaSize)
 	{

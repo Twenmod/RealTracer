@@ -4,6 +4,7 @@
 
 #include "Scene.h"
 #include "Sphere.h"
+#include "Quad.h"
 #include "LambertianMat.h"
 #include "MetalMat.h"
 #include "DielectricMat.h"
@@ -17,25 +18,28 @@ void DemoApp::Init()
 {
 
 	//Add objects to scene
-	//scene.Add(*new Sphere(red, 1.f, 0.f, -1.f, 0.5f));
-	scene.Add(*new Sphere(diffuse, 0.f, 0.f, -0.2f, 0.5f));
-	scene.Add(*new Sphere(metal, 1.f, 0.0f, -0.f, 0.5f));
-	scene.Add(*new Sphere(glass, -1.f, 0.f, -0.f, 0.5f));
-	//scene.Add(*new Sphere(*glass,Vec3(-1.f, 0.f, -1.f), 0.5f));
-	//scene.Add(*new Sphere(*metalRight,Vec3(1.f, 0.f, -1.f), 0.5f));
-	scene.Add(*new Sphere(grass, 0.f, -100.5f, 0.f, 100.f));
-	//scene.Add(*new Sphere(light, 0.f, 3.f, -4.f, 1.f));
+	scene.Add(*new Quad(white, Point3(-2, -1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //floor
+	scene.Add(*new Quad(white, Point3(-2, 1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //ceiling
+	scene.Add(*new Quad(light, Point3(-0.5, 0.99, 0.5), Vec3(1, 0, 0), Vec3(0, 0, -1))); //ceiling light
+	scene.Add(*new Quad(white, Point3(-2, -1, -2), Vec3(4, 0, 0), Vec3(0, 5, 0))); //wall
+	scene.Add(*new Quad(red, Point3(-2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
+	scene.Add(*new Quad(blue, Point3(2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
+	scene.Add(*new Sphere(metal, 0, -0.6, 0, 0.4f));
 
-	Texture* checkerTexture = new CheckerTexture3D(1.f, ColorGroup(0.f), ColorGroup(1.f, 0, 1.f));
-	Texture* imageTexture = new ImageTexture("./assets/texture.jpg");
+
+	//Texture* checkerTexture = new CheckerTexture3D(1.f, ColorGroup(0.f), ColorGroup(1.f, 0, 1.f));
+	Texture* whiteTexture = new SolidColorTexture(ColorGroup(1.f));
+	Texture* redTexture = new SolidColorTexture(ColorGroup(1.f,0.f,0.f));
+	Texture* blueTexture = new SolidColorTexture(ColorGroup(0.f,0.f,1.f));
+	//Texture* imageTexture = new ImageTexture("./assets/texture.jpg");
 
 
 	//Add material
-	mainCam->materials.push_back(new LambertianMat(*imageTexture));
-	mainCam->materials.push_back(new LambertianMat(*checkerTexture));
-	mainCam->materials.push_back(new DielectricMat(1.5f));
+	mainCam->materials.push_back(new LambertianMat(*whiteTexture));
+	mainCam->materials.push_back(new LambertianMat(*redTexture));
+	mainCam->materials.push_back(new LambertianMat(*blueTexture));
 	mainCam->materials.push_back(new MetalMat(ColorGroup(xs::batch<float>(0.8f)), 0.8f));
-	mainCam->materials.push_back(new EmissiveMat(ColorGroup(xs::batch<float>(50.f))));
+	mainCam->materials.push_back(new EmissiveMat(ColorGroup(xs::batch<float>(1.f))));
 
 
 	mainCam->m_position = Vec3(0, 0.5, 3);

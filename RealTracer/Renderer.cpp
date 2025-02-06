@@ -88,10 +88,12 @@ bool Renderer::CopyBuffer(std::vector<unsigned char>* _frameColorData, std::vect
 
 		}//Unlock
 		m_frameReady = false;
+		return true;
 	}
 	else
 	{
 		Logger::LogWarning("Tried to copy data while frame was being processed", WARNING_SEVERITY::LOW);
+		return false;
 	}
 }
 

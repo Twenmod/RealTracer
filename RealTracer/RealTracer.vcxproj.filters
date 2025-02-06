@@ -116,6 +116,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>RealTracer</Filter>
     </ClCompile>
+    <ClCompile Include="Quad.cpp">
+      <Filter>RealTracer\Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ray.h">
@@ -225,6 +228,9 @@
     </ClInclude>
     <ClInclude Include="Renderer.h">
       <Filter>RealTracer</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>RealTracer\Objects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
