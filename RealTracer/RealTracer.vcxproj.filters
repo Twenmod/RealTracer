@@ -113,6 +113,9 @@
     <ClCompile Include="stb_image.cpp">
       <Filter>Lib</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>RealTracer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Ray.h">
@@ -219,6 +222,9 @@
     </ClInclude>
     <ClInclude Include="stb_image.h">
       <Filter>Lib</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>RealTracer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

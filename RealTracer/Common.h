@@ -5,6 +5,7 @@ namespace xs = xsimd;
 //Window settings
 constexpr int WINDOW_WIDTH = 1280;
 constexpr int WINDOW_HEIGHT = 720;
+constexpr bool VSYNC_ENABLED = false;
 
 //Image settings
 constexpr int IMAGE_WIDTH = 1280u/4u;

@@ -13,6 +13,7 @@
 
 #include "App.h"
 #include "DemoApp.h"
+#include "Renderer.h"
 
 void error_callback(int, const char* description)
 {
@@ -24,17 +25,6 @@ static void key_callback(GLFWwindow* window, int key, int, int action, int)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-GLFWwindow* window;
-
-
-
-
-//Global variables are good for your health
-std::vector<unsigned char> frameTextureData(IMAGE_WIDTH* IMAGE_HEIGHT * 3);
-std::vector<unsigned char> frameNormalData(IMAGE_WIDTH* IMAGE_HEIGHT * 3);
-std::vector<Vec3> framePosData(IMAGE_WIDTH* IMAGE_HEIGHT);
-std::vector<float> frameUpdatesData(IMAGE_WIDTH* IMAGE_HEIGHT);
-EngineSettings settings;
 
 const char* vertexShader = R"(
 #version 330 core
@@ -139,12 +129,16 @@ unsigned int screenIndices[] = {
 };
 
 
+GLFWwindow* window;
+std::vector<unsigned char> frameTextureData(IMAGE_WIDTH* IMAGE_HEIGHT * 3);
+std::vector<unsigned char> frameNormalData(IMAGE_WIDTH* IMAGE_HEIGHT * 3);
+std::vector<Vec3> framePosData(IMAGE_WIDTH* IMAGE_HEIGHT);
+std::vector<float> frameUpdatesData(IMAGE_WIDTH* IMAGE_HEIGHT);
+EngineSettings settings;
 unsigned int screenVAO, screenVBO;
 uint frameTexture;
 uint frameNormalTexture;
 unsigned int screenShader;
-glm::mat4 oldView, view;
-glm::mat4 oldProjection, projection;
 
 void Init()
 {
@@ -176,7 +170,7 @@ void Init()
 		Logger::LogWarning("OpenGL context creation failed", WARNING_SEVERITY::FATAL);
 		abort();
 	}
-	glfwSwapInterval(0);
+	glfwSwapInterval(VSYNC_ENABLED);
 
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -231,208 +225,6 @@ void Init()
 
 }
 
-glm::vec2 worldToScreen(Vec3 worldPos, glm::mat4 view, glm::mat4 projection)
-{
-	// Transform the world-space point into clip space.
-	glm::vec4 clipSpacePos = projection * view * glm::vec4(worldPos.x(), worldPos.y(), worldPos.z(), 1.0f);
-	// If the point is behind the camera, return an invalid coordinate.
-	if (clipSpacePos.w <= 0.0001f)
-	{
-		return glm::vec2(-1000.0f, -1000.0f);  // An invalid coordinate
-	}
-
-	// Normalize to NDC.
-	glm::vec3 ndcPos = (glm::vec3(clipSpacePos) / clipSpacePos.w);
-
-	// Convert NDC [-1, 1] to screen coordinates.
-	glm::vec2 screenPos;
-	screenPos.x = (ndcPos.x * 0.5f + 0.5f) * IMAGE_WIDTH;
-	screenPos.y = (1.0f - (ndcPos.y * 0.5f + 0.5f)) * IMAGE_HEIGHT;  // Flip Y for screen space
-	return screenPos;
-}
-
-
-void Accumulate(float deltaTime, std::vector<Vec3>& frame, std::vector<Vec3>& frameNormal, std::vector<Vec3>& framePos)
-{
-
-	std::vector<unsigned char> frameNormalDataBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
-	std::vector<unsigned char> frameColorDataBuffer(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
-	std::vector<Vec3> framePosDataBuffer(IMAGE_WIDTH * IMAGE_HEIGHT);
-
-	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
-	{
-
-		Vec3 currentPos = framePos[i];
-		Vec3 currentNormal = frameNormal[i];
-
-		//Reproject
-		glm::vec2 reprojected = worldToScreen(currentPos, oldView, oldProjection);
-
-		bool isReprojected = false;
-
-		// no reprojection if out of bounds
-		if (settings.accumulatorOn && !settings.showNormals && !settings.showPositions)
-		{
-			if (reprojected.x >= 0 && reprojected.x < IMAGE_WIDTH &&
-				reprojected.y >= 0 && reprojected.y < IMAGE_HEIGHT)
-			{
-				if (!(currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f))
-				{
-					int currY = floor(i / IMAGE_WIDTH);
-					int currX = i - (currY * IMAGE_WIDTH);
-
-					//Get prev pixel here
-					int prevX = static_cast<int>(floor(reprojected.x));
-					int prevY = static_cast<int>(floor(reprojected.y));
-					prevX = std::max(std::min(prevX, IMAGE_WIDTH - 1), 0);
-					prevY = std::max(std::min(prevY, IMAGE_HEIGHT - 1), 0);
-
-
-					int prevI = prevX + prevY * IMAGE_WIDTH;
-					Vec3 prevPos = framePosData[prevI];
-					Vec3 prevNormal;
-					prevNormal.setX(frameNormalData[prevI * 3 + 0] / 0xff);
-					prevNormal.setY(frameNormalData[prevI * 3 + 1] / 0xff);
-					prevNormal.setZ(frameNormalData[prevI * 3 + 2] / 0xff);
-
-					// Check if the previous pixel's position and normal match the current pixel
-					float positionDiff = (currentPos - prevPos).Length();
-					float normalDiff = dot(currentNormal, prevNormal);
-
-					if (positionDiff < settings.overrideTreshold && normalDiff < settings.overrideTreshold)
-					{
-						float newR;
-						float newG;
-						float newB;
-
-						newR = frame[i].x() * 0xff;
-						newG = frame[i].y() * 0xff;
-						newB = frame[i].z() * 0xff;
-
-						//Use previous frame
-						frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 0] * (1.f - settings.smoothingFactor) + newR * settings.smoothingFactor);  // R			
-						frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 1] * (1.f - settings.smoothingFactor) + newG * settings.smoothingFactor);  // G
-						frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(frameTextureData[prevI * 3 + 2] * (1.f - settings.smoothingFactor) + newB * settings.smoothingFactor);  // B
-						//frameTextureData[i * 3 + 0] = static_cast<unsigned char>(0);  // r
-						//frameTextureData[i * 3 + 1] = static_cast<unsigned char>(0xff);  // G
-						//frameTextureData[i * 3 + 2] = static_cast<unsigned char>(0);  // b
-						isReprojected = true;
-					}
-				}
-			}
-		}
-		if (!isReprojected)
-		{
-			if (settings.showNormals)
-			{
-				frameColorDataBuffer[i * 3 + 0] = frameNormalData[i * 3 + 0];
-				frameColorDataBuffer[i * 3 + 1] = frameNormalData[i * 3 + 1];
-				frameColorDataBuffer[i * 3 + 2] = frameNormalData[i * 3 + 2];
-			}
-			else if (settings.showPositions)
-			{
-				frameColorDataBuffer[i * 3 + 0] = framePos[i].x() * 0xff;
-				frameColorDataBuffer[i * 3 + 1] = framePos[i].y() * 0xff;
-				frameColorDataBuffer[i * 3 + 2] = framePos[i].z() * 0xff;
-			}else if (settings.showChange)
-			{
-				frameColorDataBuffer[i * 3 + 0] = 0xff;  // r
-				frameColorDataBuffer[i * 3 + 1] = 0x00;  // G
-				frameColorDataBuffer[i * 3 + 2] = 0x00;  // b
-			}
-			else
-			{
-				frameColorDataBuffer[i * 3 + 0] = frame[i].x() * 0xff;  // r
-				frameColorDataBuffer[i * 3 + 1] = frame[i].y() * 0xff;  // G
-				frameColorDataBuffer[i * 3 + 2] = frame[i].z() * 0xff;  // b
-			}
-		}
-
-		frameNormalDataBuffer[i * 3 + 0] = currentNormal.x() * 0xff;
-		frameNormalDataBuffer[i * 3 + 1] = currentNormal.y() * 0xff;
-		frameNormalDataBuffer[i * 3 + 2] = currentNormal.z() * 0xff;
-
-		framePosDataBuffer[i] = currentPos;
-	}
-
-	for (int i = 0; i < IMAGE_WIDTH * IMAGE_HEIGHT; i++)
-	{
-		frameTextureData[i * 3 + 0] = frameColorDataBuffer[i * 3 + 0];
-		frameTextureData[i * 3 + 1] = frameColorDataBuffer[i * 3 + 1];
-		frameTextureData[i * 3 + 2] = frameColorDataBuffer[i * 3 + 2];
-
-		frameNormalData[i * 3 + 0] = frameNormalDataBuffer[i * 3 + 0];
-		frameNormalData[i * 3 + 1] = frameNormalDataBuffer[i * 3 + 1];
-		frameNormalData[i * 3 + 2] = frameNormalDataBuffer[i * 3 + 2];
-
-		framePosData[i] = framePosDataBuffer[i];
-	}
-}
-//	frameUpdatesData[i] -= deltaTime;
-//	Vec3 frameColor = frame[i];
-//	if (settings.showNormals) frameColor = frameNormal[i];
-//	if (settings.showPositions) frameColor = framePos[i]*0.01f;
-//	Vec3 frameNormalColor = frameNormal[i];
-//	float r = LinearToGammaSpace(frameColor.x()) * 0xff;
-//	float g = LinearToGammaSpace(frameColor.y()) * 0xff;
-//	float b = LinearToGammaSpace(frameColor.z()) * 0xff;
-//	float nR = frameNormalColor.x() * 0xff;
-//	float nG = frameNormalColor.y() * 0xff;
-//	float nB = frameNormalColor.z() * 0xff;
-//	if (settings.accumulatorOn)
-//	{
-//		float oldr = frameTextureData[i * 3 + 0];
-//		float oldg = frameTextureData[i * 3 + 1];
-//		float oldb = frameTextureData[i * 3 + 2];
-//		float oldNormalR = frameNormalData[i * 3 + 0];
-//		float oldNormalB = frameNormalData[i * 3 + 2];
-//		float oldNormalG = frameNormalData[i * 3 + 1];
-//		float normalDistance = std::sqrt(
-//			(nR - oldNormalR) * (nR - oldNormalR) +
-//			(nG - oldNormalG) * (nG - oldNormalG) +
-//			(nB - oldNormalB) * (nB - oldNormalB)
-//		);
-//		if (normalDistance > settings.overrideTreshold || (nR == 127.5f && nG == 127.5f && nB == 127.5f))
-//		{
-//			frameUpdatesData[i] = settings.updateTimer;
-//		}
-//		if (frameUpdatesData[i] > 0)
-//		{
-//			// override
-//			if (settings.showChange)
-//			{
-//				frameTextureData[i * 3 + 0] = 0xff;  // r
-//				frameTextureData[i * 3 + 1] = 0;  // G
-//				frameTextureData[i * 3 + 2] = 0;  // b
-//			}
-//			else
-//			{
-//				frameTextureData[i * 3 + 0] = static_cast<unsigned char>(r);  // r
-//				frameTextureData[i * 3 + 1] = static_cast<unsigned char>(g);  // G
-//				frameTextureData[i * 3 + 2] = static_cast<unsigned char>(b);  // b
-//			}
-//		}
-//		else
-//		{ // accumalate
-//			frameTextureData[i * 3 + 0] = static_cast<unsigned char>(oldr * (1.f - settings.smoothingFactor) + r * settings.smoothingFactor);  // G			
-//			frameTextureData[i * 3 + 1] = static_cast<unsigned char>(oldg * (1.f - settings.smoothingFactor) + g * settings.smoothingFactor);  // G
-//			frameTextureData[i * 3 + 2] = static_cast<unsigned char>(oldb * (1.f - settings.smoothingFactor) + b * settings.smoothingFactor);  // b
-//		}
-//	}
-//	else
-//	{
-//		frameTextureData[i * 3 + 0] = static_cast<unsigned char>(r);  // r
-//		frameTextureData[i * 3 + 1] = static_cast<unsigned char>(g);  // G
-//		frameTextureData[i * 3 + 2] = static_cast<unsigned char>(b);  // b
-//	}
-
-//	frameNormalData[i * 3 + 0] = static_cast<unsigned char>(nR);  // r
-//	frameNormalData[i * 3 + 1] = static_cast<unsigned char>(nG);  // G
-//	frameNormalData[i * 3 + 2] = static_cast<unsigned char>(nB);  // b
-
-//}
-//}
-
 void RenderScreen()
 {
 	glUseProgram(screenShader);
@@ -448,40 +240,6 @@ void RenderScreen()
 	glUniform1i(glGetUniformLocation(screenShader, "denoise"), settings.denoise);
 	glBindVertexArray(screenVAO);
 	glDrawArrays(GL_TRIANGLES, 0, (GLsizei)30);
-}
-
-std::atomic<bool> isRunning(true);
-std::atomic<bool> frameReady(true);
-float traceTime = 0;
-App* theApp;
-std::mutex renderMutex;
-std::vector<Vec3> frameNormal(IMAGE_WIDTH* IMAGE_HEIGHT);
-std::vector<Point3> framePosition(IMAGE_WIDTH* IMAGE_HEIGHT);
-std::vector<Vec3> frame(IMAGE_WIDTH* IMAGE_HEIGHT);
-
-
-void renderThreadMain()
-{
-	double lastTime = glfwGetTime();
-
-	theApp->GetCamera().GetProjections(oldView, oldProjection);
-	while (isRunning)
-	{
-		{
-			std::lock_guard<std::mutex> lock(renderMutex);
-
-			double time = glfwGetTime();
-			traceTime = time - lastTime;
-			lastTime = time;
-			// Call theApp render method
-			theApp->Trace(frame, frameNormal, framePosition);
-
-
-
-			frameReady = true;
-		} // unlock
-		std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Avoid overloading
-	}
 }
 
 
@@ -500,8 +258,6 @@ __________              ._____________
 
 
 	Init();
-
-
 
 	GLint success;
 	GLchar infoLog[1024];
@@ -578,12 +334,13 @@ __________              ._____________
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, frameNormalTexture);
 
-	theApp = new DemoApp(*window, settings);
+	App* theApp = new DemoApp(*window, settings);
 	theApp->Init();
+	Renderer* renderer = new Renderer();
+	renderer->Init(*theApp, settings);
 
 	double lastTime = glfwGetTime();
 
-	std::thread renderThread(renderThreadMain); // Launch the rendering thread
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -597,19 +354,9 @@ __________              ._____________
 
 		theApp->FastTick(mainDeltaTime);
 
-		if (frameReady)
+		if (renderer->GetFrameReady())
 		{
-			{
-				std::lock_guard<std::mutex> lock(renderMutex); // Lock the renderThread
-				Accumulate(traceTime, frame, frameNormal, framePosition); // Copy data
-
-				theApp->Tick(traceTime);
-				oldView = view;
-				oldProjection = projection;
-				theApp->GetCamera().GetProjections(view, projection);
-
-			}//Unlock
-			frameReady = false;
+			renderer->CopyBuffer(&frameTextureData, &frameNormalData, &framePosData);
 		}
 
 		RenderScreen();
@@ -627,13 +374,13 @@ __________              ._____________
 
 	}
 
-	isRunning = false;
-	renderThread.join(); // Make sure renderthread exited
-
+	std::clog << "\x1B[43m\x1B[30m EXITING APPLICATION \n\x1B[0m";
 
 	glDeleteTextures(1, &frameTexture);
 	glDeleteTextures(1, &frameNormalTexture);
 
+	delete renderer;
+	delete theApp;
 	Logger::DeleteLogger();
 	JobManager::DeleteJobManager();
 	glfwDestroyWindow(window);

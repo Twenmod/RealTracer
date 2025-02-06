@@ -31,9 +31,13 @@ void Logger::LogWarning(const char* warning, WARNING_SEVERITY severity)
 			std::clog << "\x1B[91m -WARNING- ";
 			break;
 		case WARNING_SEVERITY::FATAL:
-			std::clog << "\x1B[31m  \x1B[4m- FATAL -\x1B[24m  \x1B[5m";
+			std::clog << "\x1B[31m  \x1B[4m- FATAL -\x1B[24m \x1B[5m\x1B[41m\x1B[30m";
 			break;
 	}
 
-	std::clog << warning << "\n \x1B[0m";
+	std::clog<<" " << warning << " \n \x1B[0m";
+	if (severity == WARNING_SEVERITY::FATAL)
+	{
+		abort();
+	}
 }
