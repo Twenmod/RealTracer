@@ -3,21 +3,20 @@
 #include "Sphere.h"
 #include "Material.h"
 
-Sphere::Sphere(E_MATERIALS _material, float _posX, float _posY, float _posZ, float _radius)
+Sphere::Sphere(E_MATERIALS _material, Vec3 _position, float _radius)
 {
 	material = _material;
-	posX = _posX;
-	posY = _posY;
-	posZ = _posZ;
+	position = _position;
 	radius = _radius;
+	m_boundingBox = AABB(_position - Vec3(radius), _position + Vec3(radius));
 }
 
 xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _rayT, HitInfoGroup& _outHit) const
 {
 	Vec3Group oc;
-	oc.x = posX - _ray.origin.x;
-	oc.y = posY - _ray.origin.y;
-	oc.z = posZ - _ray.origin.z;
+	oc.x = position.x() - _ray.origin.x;
+	oc.y = position.y() - _ray.origin.y;
+	oc.z = position.z() - _ray.origin.z;
 	xs::batch<float> a = _ray.direction.Length2();
 	xs::batch<float> h = Dot(_ray.direction, oc);
 	xs::batch<float> c = oc.Length2() - radius * radius;
@@ -55,9 +54,9 @@ xs::batch_bool<float> Sphere::Intersect(const RayGroup& _ray, IntervalGroup _ray
 	_outHit.point.y = xs::select(validRoot, point.y, _outHit.point.y);
 	_outHit.point.z = xs::select(validRoot, point.z, _outHit.point.z);
 	Vec3Group outNormal;
-	outNormal.x = (point.x - posX) / radius;
-	outNormal.y = (point.y - posY) / radius;
-	outNormal.z = (point.z - posZ) / radius;
+	outNormal.x = (point.x - position.x()) / radius;
+	outNormal.y = (point.y - position.y()) / radius;
+	outNormal.z = (point.z - position.z()) / radius;
 	outNormal = Normalize(outNormal);
 	_outHit.SetNormal(_ray, outNormal, validRoot);
 	xs::batch<float> u, v;

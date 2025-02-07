@@ -13,19 +13,28 @@
 #include "Camera.h"
 
 #include "Texture.h"
+#include "BVHNode.h"
 
 void DemoApp::Init()
 {
-
+	Scene scene;
 	//Add objects to scene
-	scene.Add(*new Quad(white, Point3(-2, -1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //floor
-	scene.Add(*new Quad(white, Point3(-2, 1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //ceiling
-	scene.Add(*new Quad(light, Point3(-0.5, 0.99, 0.5), Vec3(1, 0, 0), Vec3(0, 0, -1))); //ceiling light
-	scene.Add(*new Quad(white, Point3(-2, -1, -2), Vec3(4, 0, 0), Vec3(0, 5, 0))); //wall
-	scene.Add(*new Quad(red, Point3(-2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
-	scene.Add(*new Quad(blue, Point3(2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
-	scene.Add(*new Sphere(metal, 0, -0.6, 0, 0.4f));
+	//scene.Add(*new Quad(white, Point3(-2, -1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //floor
+	////scene.Add(*new Quad(white, Point3(-2, 1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //ceiling
+	////scene.Add(*new Quad(light, Point3(-0.5, 0.99, 0.5), Vec3(1, 0, 0), Vec3(0, 0, -1))); //ceiling light
+	////scene.Add(*new Quad(white, Point3(-2, -1, -2), Vec3(4, 0, 0), Vec3(0, 5, 0))); //wall
+	//scene.Add(*new Quad(red, Point3(-2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
+	//scene.Add(*new Quad(blue, Point3(2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
+	
+	for (size_t i = 0; i < 100; i++)
+	{
+		scene.Add(*new Sphere(red, Vec3(Rand(-5.f,5.f), 0, Rand(-5.f, 5.f)), 0.4f));
 
+	}
+	scene.Add(*new Sphere(white, Vec3(0, -100, 0), 100.f));
+
+	
+	renderScene = new BVHNode(scene);
 
 	//Texture* checkerTexture = new CheckerTexture3D(1.f, ColorGroup(0.f), ColorGroup(1.f, 0, 1.f));
 	Texture* whiteTexture = new SolidColorTexture(ColorGroup(1.f));
@@ -85,7 +94,7 @@ void DemoApp::FastTick(float _deltaTime)
 
 void DemoApp::Trace(std::vector<Vec3>& _colorOut, std::vector<Vec3>& _normalOut, std::vector<Vec3>& _posOut)
 {
-	_colorOut = mainCam->Render(scene, m_settings.samples, &_normalOut, &_posOut);
+	_colorOut = mainCam->Render(*renderScene, m_settings.samples, &_normalOut, &_posOut);
 }
 
 void DemoApp::Render()
@@ -127,10 +136,8 @@ void DemoApp::Render()
 			{
 				m_settings.overrideTreshold = baseTreshold;
 			}
-			float invSmooth = 1.f - m_settings.smoothingFactor;
-			if (ImGui::SliderFloat("  Smoothing", &invSmooth, 0, 0.9999f, "%.4f"))
+			if (ImGui::SliderFloat("  Smoothing", &m_settings.smoothingFactor, 0, 0.9999f, "%.4f"))
 			{
-				m_settings.smoothingFactor = 1.f - invSmooth;
 			}
 		}
 		ImGui::Checkbox("Denoise", &m_settings.denoise);

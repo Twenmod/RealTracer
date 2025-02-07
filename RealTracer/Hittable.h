@@ -1,5 +1,6 @@
 #pragma once
 #include "Ray.h"
+#include "AABB.h"
 
 class Material;
 
@@ -27,6 +28,7 @@ public:
 		normal.z = xs::select(mask, xs::select(frontFace, _normal.z, -_normal.z), normal.z);
 	}
 
+
 };
 
 
@@ -34,7 +36,8 @@ class Hittable
 {
 public:
 	virtual ~Hittable() = default;
-
 	virtual xs::batch_bool<float> Intersect(const RayGroup& ray, IntervalGroup rayT, HitInfoGroup& outHit) const = 0;
+	virtual const AABB& GetBoundingBox() const = 0;
+
 };
 

@@ -11,6 +11,8 @@ namespace xs = xsimd;
 #include <thread>
 #include <Windows.h>
 #include <mutex>
+#include <algorithm>
+
 #include "Math.h"
 #include "Logger.h"
 

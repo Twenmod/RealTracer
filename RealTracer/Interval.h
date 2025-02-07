@@ -25,10 +25,21 @@ private:
 class IntervalGroup
 {
 public:
+	IntervalGroup()
+	{
+		min = xs::batch<float>(INFINITY);
+		max = xs::batch<float>(-INFINITY);
+	}
 	IntervalGroup(xs::batch<float> _min, xs::batch<float> _max)
 	{
 		min = _min;
 		max = _max;
+	}
+	//Create a interval around 2 intervals
+	IntervalGroup(const IntervalGroup& a, const IntervalGroup& b)
+	{
+		min = xs::min(a.min, b.min);
+		max = xs::max(a.max, b.max);
 	}
 
 	xs::batch<float> Size() const { return max - min; }
@@ -43,4 +54,8 @@ public:
 
 	xs::batch<float> min;
 	xs::batch<float> max;
+
+	static const IntervalGroup empty, universe;
+
 };
+

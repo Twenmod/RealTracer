@@ -11,3 +11,6 @@ Interval::Interval(float _min, float _max)
 
 const Interval Interval::empty = Interval(INFINITY, -INFINITY);
 const Interval Interval::universe = Interval(-INFINITY, INFINITY);
+
+const IntervalGroup IntervalGroup::empty = IntervalGroup(INFINITY, -INFINITY);
+const IntervalGroup IntervalGroup::universe = IntervalGroup(-INFINITY, INFINITY);

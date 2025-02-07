@@ -20,7 +20,7 @@ public:
 	}
 private:
 	Camera* mainCam;
-	Scene scene;
+	Hittable* renderScene;
 
 	int frameRateSize{ 30 };
 	std::vector<float> frameRates{};

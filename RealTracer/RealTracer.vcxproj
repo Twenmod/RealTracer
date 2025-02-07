@@ -289,9 +289,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release AVX512|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release SSE2|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="AABB.cpp" />
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="BVHNode.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="DemoApp.cpp" />
     <ClCompile Include="DielectricMat.cpp" />
     <ClCompile Include="EmissiveMat.cpp" />
@@ -361,11 +362,12 @@
   <ItemGroup>
     <ClInclude Include="..\include\glad\glad.h" />
     <ClInclude Include="..\include\KHR\khrplatform.h" />
+    <ClInclude Include="AABB.h" />
     <ClInclude Include="App.h" />
+    <ClInclude Include="BVHNode.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Common.h" />
-    <ClInclude Include="Cube.h" />
     <ClInclude Include="DemoApp.h" />
     <ClInclude Include="DielectricMat.h" />
     <ClInclude Include="EmissiveMat.h" />

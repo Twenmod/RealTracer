@@ -8,8 +8,8 @@ constexpr int WINDOW_HEIGHT = 720;
 constexpr bool VSYNC_ENABLED = false;
 
 //Image settings
-constexpr int IMAGE_WIDTH = 1280u/4u;
-constexpr int IMAGE_HEIGHT = 720u/4;
+constexpr int IMAGE_WIDTH = 1280u/5u;
+constexpr int IMAGE_HEIGHT = 720u/5;
 
 
 //Tracing settings

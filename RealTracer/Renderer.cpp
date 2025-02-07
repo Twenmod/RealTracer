@@ -199,9 +199,10 @@ void Renderer::AccumulateFrame(float deltaTime, const std::vector<Vec3>& _frame,
 							newB = _frame[i].z() * 0xff;
 
 							//Use previous frame
-							frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 0] * (1.f - m_settings->smoothingFactor) + newR * m_settings->smoothingFactor);  // R			
-							frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 1] * (1.f - m_settings->smoothingFactor) + newG * m_settings->smoothingFactor);  // G
-							frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 2] * (1.f - m_settings->smoothingFactor) + newB * m_settings->smoothingFactor);  // B
+							float a = 1.f - exp2(-m_traceTime / m_settings->smoothingFactor);
+							frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 0] * (1.f - a) + newR * a);  // R			
+							frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 1] * (1.f - a) + newG * a);  // G
+							frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 2] * (1.f - a) + newB * a);  // B
 							//frameTextureData[i * 3 + 0] = static_cast<unsigned char>(0);  // r
 							//frameTextureData[i * 3 + 1] = static_cast<unsigned char>(0xff);  // G
 							//frameTextureData[i * 3 + 2] = static_cast<unsigned char>(0);  // b
