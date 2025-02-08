@@ -107,15 +107,17 @@ void Renderer::RenderThreadMain()
 		{
 			std::lock_guard<std::mutex> lock(m_renderMutex);
 
+			m_oldView = m_currentView;
+			m_oldProjection = m_currentProjection;
+			m_renderApplication->GetCamera().GetProjections(m_currentView, m_currentProjection);
+
 			double time = glfwGetTime();
 			m_traceTime = time - lastTime;
 			lastTime = time;
 			// Call theApp render method
 			m_renderApplication->Trace(m_currentFrameColor, m_currentFrameNormal, m_currentFramePosition);
 			AccumulateFrame(m_traceTime, m_currentFrameColor, m_currentFrameNormal, m_currentFramePosition);
-			m_oldView = m_currentView;
-			m_oldProjection = m_currentProjection;
-			m_renderApplication->GetCamera().GetProjections(m_currentView, m_currentProjection);
+
 			m_frameReady = true;
 		} // unlock
 		std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Avoid overloading
