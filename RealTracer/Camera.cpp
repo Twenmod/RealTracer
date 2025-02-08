@@ -193,7 +193,7 @@ void Camera::Initialize()
 	float viewportWidth = viewportHeight * ASPECT_RATIO;
 
 	w = Normalize(-m_direction);
-	u = Normalize(cross(m_up, w));
+	u = Normalize(cross(m_worldUp, w));
 	v = cross(w, u);
 
 	//Viewport

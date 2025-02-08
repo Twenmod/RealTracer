@@ -178,6 +178,9 @@ void Renderer::AccumulateFrame(float deltaTime, const std::vector<Vec3>& _frame,
 
 
 				int prevI = prevX + prevY * IMAGE_WIDTH;
+
+				if (currentNormal.x() == 0.5f, currentNormal.y() == 0.5f, currentNormal.z() == 0.5f) prevI = i; // Dont reproject if it is background
+
 				Vec3 prevPos = m_framePosData[prevI];
 				Vec3 prevNormal;
 				prevNormal.setX(m_frameNormalData[prevI * 3 + 0]);

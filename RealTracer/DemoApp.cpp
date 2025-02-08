@@ -73,14 +73,14 @@ void DemoApp::Tick(float _deltaTime)
 	//dynamic_cast<Sphere*>(scene.GetObjects()[0])->posY = sin(timer) * 0.5f + 0.5f;
 	//dynamic_cast<Sphere*>(scene.GetObjects()[2])->posZ = sin(timer * 0.6f) * 2.f;
 
-	if (glfwGetKey(&m_window, GLFW_KEY_W)) mainCam->m_position += Vec3(1, 0, 0)*_deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_S)) mainCam->m_position += Vec3(-1, 0, 0) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_D)) mainCam->m_position += Vec3(0, 0, 1) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_A)) mainCam->m_position += Vec3(0, 0, -1) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_C)) mainCam->m_position += Vec3(0, -1, 0) * _deltaTime;
-	if (glfwGetKey(&m_window, GLFW_KEY_SPACE)) mainCam->m_position += Vec3(0, 1, 0) * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_W)) mainCam->m_position += mainCam->m_direction *_deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_S)) mainCam->m_position += -mainCam->m_direction * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_D)) mainCam->m_position += mainCam->m_right * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_A)) mainCam->m_position += -mainCam->m_right * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_SPACE)) mainCam->m_position += mainCam->m_up * _deltaTime;
+	if (glfwGetKey(&m_window, GLFW_KEY_C)) mainCam->m_position += -mainCam->m_up * _deltaTime;
 	//mainCam->m_position = Vec3(0, .5f, 1);
-	mainCam->m_direction = Normalize(Vec3(0, 0, 0) - mainCam->m_position);
+	mainCam->SetDirection(Normalize(Vec3(0, 0, 0) - mainCam->m_position));
 
 }
 
