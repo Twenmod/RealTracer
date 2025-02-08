@@ -45,8 +45,6 @@ xs::batch_bool<float> BVHNode::Intersect(const RayGroup& _ray, IntervalGroup _ra
 	xs::batch_bool<float> intersectsBB = m_boundingBox.Intersects(_ray, _rayT);
 	if (xs::all(!intersectsBB)) return intersectsBB;
 
-
-
 	xs::batch_bool<float> hitLeft = left->Intersect(_ray, _rayT, _outHit);
 	xs::batch_bool<float> hitRight;
 	if (right == nullptr) hitRight = xs::batch_bool<float>(false);

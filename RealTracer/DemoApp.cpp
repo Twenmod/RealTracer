@@ -26,9 +26,9 @@ void DemoApp::Init()
 	//scene.Add(*new Quad(red, Point3(-2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
 	//scene.Add(*new Quad(blue, Point3(2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
 	
-	for (size_t i = 0; i < 100; i++)
+	for (size_t i = 0; i < 500; i++)
 	{
-		scene.Add(*new Sphere(red, Vec3(Rand(-5.f,5.f), 0, Rand(-5.f, 5.f)), 0.4f));
+		scene.Add(*new Sphere(red, Vec3(Rand(-15.f,15.f), 0, Rand(-15.f, 15.f)), 0.4f));
 
 	}
 	scene.Add(*new Sphere(white, Vec3(0, -100, 0), 100.f));

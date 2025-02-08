@@ -10,14 +10,17 @@ xs::batch_bool<float> AABB::Intersects(const RayGroup& _ray, IntervalGroup _rayT
 	const Point3Group& origin = _ray.origin;
 	const Vec3Group& direction = _ray.direction;
 
-	xs::batch_bool<float> xIntersects = IntersectsAxis(origin.x, direction.x, _rayT, m_x);
-	xs::batch_bool<float> yIntersects = IntersectsAxis(origin.y, direction.y, _rayT, m_y);
-	xs::batch_bool<float> zIntersects = IntersectsAxis(origin.z, direction.z, _rayT, m_z);
+	xs::batch_bool<float> intersects(true);
+	intersects = intersects & IntersectsAxis(origin.x, direction.x, _rayT, m_x);
+	if (xs::all(!intersects)) return intersects;
+	intersects = intersects & IntersectsAxis(origin.y, direction.y, _rayT, m_y);
+	if (xs::all(!intersects)) return intersects;
+	intersects = intersects & IntersectsAxis(origin.z, direction.z, _rayT, m_z);
 
-	return (xIntersects & yIntersects & zIntersects);
+	return intersects;
 }
 
-xs::batch_bool<float> AABB::IntersectsAxis(const xs::batch<float>& _rayAxisOrigin, const xs::batch<float>& _rayAxisDirection, IntervalGroup _rayT, const IntervalGroup& _axisInterval) const
+xs::batch_bool<float> AABB::IntersectsAxis(const xs::batch<float>& _rayAxisOrigin, const xs::batch<float>& _rayAxisDirection, IntervalGroup& _rayT, const IntervalGroup& _axisInterval) const
 {
 	const xs::batch<float> invDir = 1.f / _rayAxisDirection;
 

@@ -20,7 +20,10 @@ xs::batch_bool<float> Scene::Intersect(const RayGroup& ray, IntervalGroup _rayT,
 		HitInfoGroup hits;
 		xs::batch_bool<float> intersections = object->Intersect(ray, IntervalGroup(_rayT.min, closestHit), hits);
 
+		if (xs::all(!intersections)) continue;
+
 		hitAny = hitAny | intersections;
+
 
 		closestHit = xs::select(intersections, hits.t, closestHit);
 		outHit.point.x = xs::select(intersections,  hits.point.x, outHit.point.x);

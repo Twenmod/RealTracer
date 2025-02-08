@@ -27,6 +27,7 @@ class IntervalGroup
 public:
 	IntervalGroup()
 	{
+
 		min = xs::batch<float>(INFINITY);
 		max = xs::batch<float>(-INFINITY);
 	}

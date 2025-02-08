@@ -38,7 +38,7 @@ public:
 
 	static const AABB empty, universe;
 private:
-	xs::batch_bool<float> IntersectsAxis(const xs::batch<float>& rayAxisOrigin, const xs::batch<float>& rayAxisDirection, IntervalGroup rayT, const IntervalGroup& axisInterval) const;
+	xs::batch_bool<float> IntersectsAxis(const xs::batch<float>& rayAxisOrigin, const xs::batch<float>& rayAxisDirection, IntervalGroup& rayT, const IntervalGroup& axisInterval) const;
 };
 
 

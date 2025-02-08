@@ -106,7 +106,6 @@ ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, co
 	HitInfoGroup hit;
 	xs::batch_bool<float> intersections = _scene.Intersect(_ray, IntervalGroup(MIN_INTERSECTION_DEPTH, INFINITY), hit);
 
-	xs::batch_bool<float> tempTest(false);
 
 	ColorGroup attentuation(xs::batch<float>(1.f));
 	if (xs::any(intersections))
@@ -118,7 +117,6 @@ ColorGroup Camera::ShootRay(const RayGroup& _ray, xs::batch<int> _maxBounces, co
 		{
 			xs::batch_bool<float> hitMaterial = xs::batch_bool_cast<float>(hit.material == xs::batch<int>(materialIndex));
 			xs::batch_bool<float> materialMask = intersections & hitMaterial;
-			tempTest = tempTest | materialMask;
 			if (xs::any(materialMask))
 			{
 				const Material* mat = materials[materialIndex];
