@@ -19,19 +19,17 @@ void DemoApp::Init()
 {
 	Scene scene;
 	//Add objects to scene
-	//scene.Add(*new Quad(white, Point3(-2, -1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //floor
+	scene.Add(*new Quad(white, Point3(-2, -1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //floor
 	////scene.Add(*new Quad(white, Point3(-2, 1, 2), Vec3(4, 0, 0), Vec3(0, 0, -4))); //ceiling
 	////scene.Add(*new Quad(light, Point3(-0.5, 0.99, 0.5), Vec3(1, 0, 0), Vec3(0, 0, -1))); //ceiling light
 	////scene.Add(*new Quad(white, Point3(-2, -1, -2), Vec3(4, 0, 0), Vec3(0, 5, 0))); //wall
-	//scene.Add(*new Quad(red, Point3(-2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
-	//scene.Add(*new Quad(blue, Point3(2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
+	scene.Add(*new Quad(red, Point3(-2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
+	scene.Add(*new Quad(blue, Point3(2, -1, 2), Vec3(0, 5, 0), Vec3(0, 0, -4)));
 	
-	for (size_t i = 0; i < 500; i++)
+	for (size_t i = 0; i < 40; i++)
 	{
-		scene.Add(*new Sphere(red, Vec3(Rand(-15.f,15.f), 0, Rand(-15.f, 15.f)), 0.4f));
-
+		scene.Add(*new Sphere(metal, Vec3(Rand(-2.f,2.f), Rand(-1.f, 1.f), Rand(-2.f, 2.f)), 0.2f));
 	}
-	scene.Add(*new Sphere(white, Vec3(0, -100, 0), 100.f));
 
 	
 	renderScene = new BVHNode(scene);

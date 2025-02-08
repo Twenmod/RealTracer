@@ -11,6 +11,12 @@ Quad::Quad(E_MATERIALS _material, const Point3& _cornerPos, const Vec3& _u, cons
 	normal = Normalize(n);
 	d = dot(normal, _cornerPos);
 	w = n / dot(n, n);
+
+
+	// Compute the bounding box around entire quad
+	AABB bbox_diagonal1 = AABB(corner, corner + u + v);
+	AABB bbox_diagonal2 = AABB(corner + u, corner + v);
+	m_boundingBox = AABB(bbox_diagonal1, bbox_diagonal2);
 }
 
 xs::batch_bool<float> Quad::Intersect(const RayGroup& _ray, IntervalGroup _rayT, HitInfoGroup& _outHit) const
