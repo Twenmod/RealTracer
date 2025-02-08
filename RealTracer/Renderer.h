@@ -32,5 +32,6 @@ private:
 	std::vector<unsigned char> m_frameColorData{ std::vector<unsigned char>() };
 	std::vector<unsigned char> m_frameNormalData{ std::vector<unsigned char>() };
 	std::vector<Vec3> m_framePosData{ std::vector<Vec3>() };
+	std::vector<float> m_frameUpdateTimerData{ std::vector<float>() };
 };
 

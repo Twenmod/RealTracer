@@ -13,6 +13,7 @@ Renderer::Renderer()
 	m_frameColorData.resize(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 	m_frameNormalData.resize(IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 	m_framePosData.resize(IMAGE_WIDTH * IMAGE_HEIGHT);
+	m_frameUpdateTimerData.resize(IMAGE_WIDTH * IMAGE_HEIGHT);
 }
 
 Renderer::~Renderer()
@@ -161,55 +162,60 @@ void Renderer::AccumulateFrame(float deltaTime, const std::vector<Vec3>& _frame,
 
 		bool isReprojected = false;
 
+		m_frameUpdateTimerData[i] -= deltaTime;
+
 		// no reprojection if out of bounds
 		if (m_settings->accumulatorOn && !m_settings->showNormals && !m_settings->showPositions)
 		{
-			if (reprojected.x >= 0 && reprojected.x < IMAGE_WIDTH &&
-				reprojected.y >= 0 && reprojected.y < IMAGE_HEIGHT)
+			if (m_frameUpdateTimerData[i] <= 0.f)
 			{
-				int currY = floor(i / IMAGE_WIDTH);
-				int currX = i - (currY * IMAGE_WIDTH);
-
-				//Get prev pixel here
-				int prevX = static_cast<int>(floor(reprojected.x));
-				int prevY = static_cast<int>(floor(reprojected.y));
-				prevX = std::max(std::min(prevX, IMAGE_WIDTH - 1), 0);
-				prevY = std::max(std::min(prevY, IMAGE_HEIGHT - 1), 0);
-
-
-				int prevI = prevX + prevY * IMAGE_WIDTH;
-
-				if (currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f) prevI = i; // Dont reproject if it is background
-
-				Vec3 prevPos = m_framePosData[prevI];
-				Vec3 prevNormal;
-				prevNormal.setX(m_frameNormalData[prevI * 3 + 0]);
-				prevNormal.setY(m_frameNormalData[prevI * 3 + 1]);
-				prevNormal.setZ(m_frameNormalData[prevI * 3 + 2]);
-
-				// Check if the previous pixel's position and normal match the current pixel
-				float positionDiff = (currentPos - prevPos).Length();
-				float normalDiff = abs(dot(currentNormal, prevNormal));
-
-				if (positionDiff < m_settings->overrideTreshold && normalDiff > m_settings->overrideTreshold)
+				if (reprojected.x >= 0 && reprojected.x < IMAGE_WIDTH &&
+					reprojected.y >= 0 && reprojected.y < IMAGE_HEIGHT)
 				{
-					float newR;
-					float newG;
-					float newB;
+					int currY = floor(i / IMAGE_WIDTH);
+					int currX = i - (currY * IMAGE_WIDTH);
 
-					newR = _frame[i].x() * 0xff;
-					newG = _frame[i].y() * 0xff;
-					newB = _frame[i].z() * 0xff;
+					//Get prev pixel here
+					int prevX = static_cast<int>(floor(reprojected.x));
+					int prevY = static_cast<int>(floor(reprojected.y));
+					prevX = std::max(std::min(prevX, IMAGE_WIDTH - 1), 0);
+					prevY = std::max(std::min(prevY, IMAGE_HEIGHT - 1), 0);
 
-					//Use previous frame
-					float a = 1.f - exp2(-m_traceTime / m_settings->smoothingFactor);
-					frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 0] * (1.f - a) + newR * a);  // R			
-					frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 1] * (1.f - a) + newG * a);  // G
-					frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 2] * (1.f - a) + newB * a);  // B
-					//frameTextureData[i * 3 + 0] = static_cast<unsigned char>(0);  // r
-					//frameTextureData[i * 3 + 1] = static_cast<unsigned char>(0xff);  // G
-					//frameTextureData[i * 3 + 2] = static_cast<unsigned char>(0);  // b
-					isReprojected = true;
+
+					int prevI = prevX + prevY * IMAGE_WIDTH;
+
+					if (currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f) prevI = i; // Dont reproject if it is background
+
+					Vec3 prevPos = m_framePosData[prevI];
+					Vec3 prevNormal;
+					prevNormal.setX(m_frameNormalData[prevI * 3 + 0]);
+					prevNormal.setY(m_frameNormalData[prevI * 3 + 1]);
+					prevNormal.setZ(m_frameNormalData[prevI * 3 + 2]);
+
+					// Check if the previous pixel's position and normal match the current pixel
+					float positionDiff = (currentPos - prevPos).Length();
+					float normalDiff = abs(dot(currentNormal, prevNormal));
+
+					if (positionDiff < m_settings->overrideTreshold && normalDiff > m_settings->overrideTreshold)
+					{
+						float newR;
+						float newG;
+						float newB;
+
+						newR = _frame[i].x() * 0xff;
+						newG = _frame[i].y() * 0xff;
+						newB = _frame[i].z() * 0xff;
+
+						//Use previous frame
+						float a = 1.f - exp2(-m_traceTime / m_settings->smoothingFactor);
+						frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 0] * (1.f - a) + newR * a);  // R			
+						frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 1] * (1.f - a) + newG * a);  // G
+						frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 2] * (1.f - a) + newB * a);  // B
+						//frameTextureData[i * 3 + 0] = static_cast<unsigned char>(0);  // r
+						//frameTextureData[i * 3 + 1] = static_cast<unsigned char>(0xff);  // G
+						//frameTextureData[i * 3 + 2] = static_cast<unsigned char>(0);  // b
+						isReprojected = true;
+					}
 				}
 			}
 		}
@@ -239,6 +245,7 @@ void Renderer::AccumulateFrame(float deltaTime, const std::vector<Vec3>& _frame,
 				frameColorDataBuffer[i * 3 + 1] = _frame[i].y() * 0xff;  // G
 				frameColorDataBuffer[i * 3 + 2] = _frame[i].z() * 0xff;  // b
 			}
+			if (m_frameUpdateTimerData[i] <= 0.f) m_frameUpdateTimerData[i] = m_settings->updateBufferTimer; // small buffer to avoid aliasing inaccuracies
 		}
 
 		frameNormalDataBuffer[i * 3 + 0] = currentNormal.x() * 0xff;

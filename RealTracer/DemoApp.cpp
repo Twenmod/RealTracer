@@ -136,6 +136,9 @@ void DemoApp::Render()
 			}
 			if (ImGui::SliderFloat("  Smoothing", &m_settings.smoothingFactor, 0, 0.9999f, "%.4f"))
 			{
+			}			
+			if (ImGui::SliderFloat("  Buffer Duration", &m_settings.updateBufferTimer, 0, 1.f, "%.2f"))
+			{
 			}
 		}
 		ImGui::Checkbox("Denoise", &m_settings.denoise);
