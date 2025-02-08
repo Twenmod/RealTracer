@@ -184,7 +184,10 @@ void Renderer::AccumulateFrame(float deltaTime, const std::vector<Vec3>& _frame,
 
 					int prevI = prevX + prevY * IMAGE_WIDTH;
 
-					if (currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f) prevI = i; // Dont reproject if it is background
+					if (currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f)
+					{
+						prevI = i; // Dont reproject if it is background
+					}
 
 					Vec3 prevPos = m_framePosData[prevI];
 					Vec3 prevNormal;
@@ -207,7 +210,15 @@ void Renderer::AccumulateFrame(float deltaTime, const std::vector<Vec3>& _frame,
 						newB = _frame[i].z() * 0xff;
 
 						//Use previous frame
-						float a = 1.f - exp2(-m_traceTime / m_settings->smoothingFactor);
+
+						float a = m_settings->smoothingFactor;
+
+						if (currentNormal.x() == 0.5f && currentNormal.y() == 0.5f && currentNormal.z() == 0.5f)
+						{
+							a *= 0.25f;
+						}
+						a = 1.f - exp2(-m_traceTime / a);
+
 						frameColorDataBuffer[i * 3 + 0] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 0] * (1.f - a) + newR * a);  // R			
 						frameColorDataBuffer[i * 3 + 1] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 1] * (1.f - a) + newG * a);  // G
 						frameColorDataBuffer[i * 3 + 2] = static_cast<unsigned char>(m_frameColorData[prevI * 3 + 2] * (1.f - a) + newB * a);  // B
